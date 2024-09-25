@@ -12,6 +12,9 @@ class Editor {
 public:
     Editor() {
         initscr();
+        start_color(); // Initialize color support
+        init_pair(1, COLOR_YELLOW, COLOR_BLACK); // Line number color
+        init_pair(2, COLOR_GREEN, COLOR_BLACK); // Status message color
         raw();                  
         keypad(stdscr, TRUE);    
         noecho();                
@@ -19,6 +22,10 @@ public:
         getmaxyx(stdscr, screenHeight, screenWidth); 
         statusMessage = "";
         inCommandMode = false;
+
+        // Initialize cursor position variables
+        previousCursorY = 0;
+        previousCursorX = 0;
     }
 
     ~Editor() {
@@ -27,9 +34,10 @@ public:
 
     void run() {
         showFileMenu(); // Show file menu at the start
+
         while (true) {
             if (!inCommandMode) {
-                displayText();
+                displayText(); // Initial display call
                 int ch = getch();
 
                 if (ch == ':') {
@@ -57,13 +65,24 @@ public:
 
     void loadFile(const string& filename) {
         ifstream file(filename);
-        if (!file) return;
-        text.clear();  
+        if (!file) return; // If the file can't be opened, do nothing
+        
+        text.clear(); // Clear previous text
         string line;
         while (getline(file, line)) {
-            text.push_back(line);
+            text.push_back(line); // Load lines from the file into the text vector
         }
         file.close();
+
+        // Reset cursor position and previous cursor tracking
+        cursorY = 0; // Start at the top of the file
+        cursorX = 0; // Start at the beginning of the first line
+        previousCursorY = 0; // Reset previous cursor position
+        previousCursorX = 0;
+
+        // Clear the screen and display the loaded text
+        clear();
+        displayAllText(); // Call displayText to show the content of the loaded file
     }
 
     void saveFile(const string& filename) {
@@ -83,20 +102,61 @@ private:
     vector<string> text = {""}; 
     int cursorX = 0; 
     int cursorY = 0; 
+    int previousCursorX = 0; // Previous cursor X position
+    int previousCursorY = 0; // Previous cursor Y position
     int screenWidth, screenHeight; 
     string statusMessage; 
     bool inCommandMode;
     string commandBuffer;
 
-    void displayText() {
-        clear();
-        // Display the line numbers
-        for (int i = 0; i < int(text.size()); ++i) {
-            mvprintw(i, 0, "%2d: %s", i + 1, text[i].c_str());  // Print line number
+    void displayAllText() {
+        clear(); // Clear the screen to avoid previous content being shown
+
+        // Display all lines of text
+        for (int i = 0; i < text.size(); ++i) {
+            mvprintw(i, 4, "%s", text[i].c_str()); // Print each line
         }
+
+        // Display line numbers for all lines
+        for (int i = 0; i < text.size(); ++i) {
+            attron(COLOR_PAIR(1)); // Turn on line number color
+            mvprintw(i, 0, "%2d: ", i + 1); // Print line number
+            attroff(COLOR_PAIR(1)); // Turn off line number color
+        }
+
+        // Move cursor to the correct position
+        move(cursorY, cursorX + 4);  // Adjust cursor position to account for line numbers
+        refresh(); // Refresh the screen to update the display
+    }
+
+    void displayText() {
+        // Refresh the current line and the line where the cursor was previously
+        if (cursorY != previousCursorY) {
+            // Clear the previous line
+            mvprintw(previousCursorY, 4, "%s", text[previousCursorY].c_str()); 
+        }
+        
+        // Display the current line
+        mvprintw(cursorY, 4, "%s", text[cursorY].c_str());
+
+        // Display line numbers for all lines
+        for (int i = 0; i < int(text.size()); ++i) {
+            attron(COLOR_PAIR(1)); // Turn on line number color
+            mvprintw(i, 0, "%2d: ", i + 1); // Print line number
+            attroff(COLOR_PAIR(1)); // Turn off line number color
+        }
+
+        attron(COLOR_PAIR(2)); // Turn on status message color
         mvprintw(screenHeight - 1, 0, statusMessage.c_str());
+        attroff(COLOR_PAIR(2)); // Turn off status message color
+        
+        // Move cursor to the correct position
         move(cursorY, cursorX + 4);  // Adjust cursor position to account for line numbers
         refresh();
+
+        // Update the previous cursor position
+        previousCursorX = cursorX;
+        previousCursorY = cursorY;
     }
 
     void moveCursorUp() {
@@ -146,6 +206,8 @@ private:
             text.erase(text.begin() + cursorY);
             cursorY--;
         }
+        // Call displayText to refresh only the necessary lines
+        displayText();
     }
 
     void insertNewline() {
@@ -158,10 +220,10 @@ private:
 
     void showStatusMessage(const string& message) {
         statusMessage = message;
-        displayText();
+        displayText(); // Call displayText to show the status message
         refresh();
-        this_thread::sleep_for(chrono::seconds(1)); 
-        statusMessage = ""; 
+        this_thread::sleep_for(chrono::milliseconds(500)); 
+        statusMessage = "";
     }
 
     void enterCommandMode() {
@@ -184,7 +246,7 @@ private:
         } else if (ch == 27) {  
             inCommandMode = false;
             statusMessage = "";
-            displayText();
+            displayText(); // Return to normal mode
         } else if (ch == KEY_BACKSPACE || ch == 127) {  
             if (!commandBuffer.empty()) {
                 commandBuffer.pop_back();
@@ -205,13 +267,15 @@ private:
     void executeCommand() {
         if (commandBuffer == ":q") {
             endwin();
-            exit(0);  
+            exit(0);
         } else if (commandBuffer == ":w") {
-            saveFile("output.txt");  
+            saveFile("output.txt");
         } else if (commandBuffer == ":wq") {
-            saveFile("output.txt");  
+            saveFile("output.txt");
             endwin();
-            exit(0); 
+            exit(0);
+        } else if (commandBuffer == ":m") {
+            showFileMenu();
         } else {
             showStatusMessage("Unknown command");
         }
