@@ -129,6 +129,26 @@ private:
         move(cursorY, cursorX + 4);  // Adjust cursor position to account for line numbers
         refresh(); // Refresh the screen to update the display
     }
+    // void displayText() {
+    //     int visibleLines = screenHeight - 2;  // Adjust for the status line at the bottom
+
+    //     // Display only the lines that fit within the screen, starting from `topLine`
+    //     for (int i = 0; i < visibleLines && i + topLine < int(text.size()); ++i) {
+    //         mvprintw(i, 5, "%s", text[i + topLine].c_str()); // Print each line
+    //     }
+
+    //     // Display line numbers for all visible lines
+    //     for (int i = 0; i < visibleLines && i + topLine < int(text.size()); ++i) {
+    //         attron(COLOR_PAIR(1)); // Turn on line number color
+    //         mvprintw(i, 0, "%3d: ", i + 1 + topLine); // Print line number
+    //         attroff(COLOR_PAIR(1)); // Turn off line number color
+    //     }
+
+    //     // Move cursor to the correct position, adjusting for scrolling
+    //     int visibleCursorY = cursorY - topLine;
+    //     move(visibleCursorY, cursorX + 5);  // Adjust cursor position to account for line numbers
+    //     refresh(); // Refresh the screen to update the display
+    // }
 
     void displayText() {
         // Refresh the current line and the line where the cursor was previously
@@ -143,7 +163,7 @@ private:
         // Display line numbers for all lines
         for (int i = 0; i < int(text.size()); ++i) {
             attron(COLOR_PAIR(1)); // Turn on line number color
-            mvprintw(i, 0, "%2d: ", i + 1); // Print line number
+            mvprintw(i, 0, "%2d: ",  i + 1 + topLine); // Print line number
             attroff(COLOR_PAIR(1)); // Turn off line number color
         }
 
@@ -160,29 +180,95 @@ private:
         previousCursorY = cursorY;
     }
 
+    void scrollDown() {
+        int visibleLines = screenHeight - 2; // Number of visible lines on the screen
+
+        // Only scroll if the cursor is at the bottom of the screen
+        if (cursorY >= topLine + visibleLines - 1) {
+            topLine++;  // Scroll the view down
+
+            // Clear the top line and shift the rest of the lines up by one
+            move(0, 0);
+            insdelln(-1);  // Delete the top line (scrolling up the rest)
+
+            // Render the new bottom line
+            int newLineIndex = topLine + visibleLines - 1;  // Index of the new bottom line
+            if (newLineIndex < int(text.size())) {
+                mvprintw(visibleLines - 1, 4, "%s", text[newLineIndex].c_str()); // Print the new line
+                attron(COLOR_PAIR(1));  // Line number color
+                mvprintw(visibleLines - 1, 0, "%2d: ", newLineIndex + 1); // Print line number
+                attroff(COLOR_PAIR(1));  // Turn off line number color
+            }
+            refresh();
+        }
+    }
+
+    void scrollUp() {
+        if (cursorY < topLine) {
+            topLine--;  // Scroll the view up
+
+            // Clear the bottom line and shift the rest of the lines down by one
+            move(screenHeight - 2, 0);
+            insdelln(1);  // Insert a line at the bottom (scrolling down the rest)
+
+            // Render the new top line
+            mvprintw(0, 4, "%s", text[topLine].c_str());  // Print the new top line
+            attron(COLOR_PAIR(1));  // Line number color
+            mvprintw(0, 0, "%2d: ", topLine + 1);  // Print line number
+            attroff(COLOR_PAIR(1));  // Turn off line number color
+
+            refresh();
+        }
+    }
+
     void moveCursorDown() {
         if (cursorY < int(text.size()) - 1) {
             cursorY++;
-            // Check if the cursor is now beyond the bottom of the visible area
-            if (cursorY >= topLine + screenHeight - 2) {  // Adjust for status line
-                topLine++;  // Scroll down
-            }
+            scrollDown();  // Scroll down if needed
             cursorX = min(cursorX, (int)text[cursorY].length());
+
+            // Move the cursor to the correct position on screen
+            int visibleCursorY = cursorY - topLine;
+            move(visibleCursorY, cursorX + 4);  // Adjust for line numbers
+            refresh();
         }
     }
 
     void moveCursorUp() {
         if (cursorY > 0) {
             cursorY--;
-            // Check if the cursor is now above the top of the visible area
-            if (cursorY < topLine) {
-                topLine--;  // Scroll up
-            }
+            scrollUp();  // Scroll up if needed
             cursorX = min(cursorX, (int)text[cursorY].length());
-        } else {
-            cursorY = 0; // Ensure it doesn't go below zero
+
+            // Move the cursor to the correct position on screen
+            int visibleCursorY = cursorY - topLine;
+            move(visibleCursorY, cursorX + 4);  // Adjust for line numbers
+            refresh();
         }
     }
+    // void moveCursorDown() {
+    //     if (cursorY < int(text.size()) - 1) {
+    //         cursorY++;
+    //         // Check if the cursor is now beyond the bottom of the visible area
+    //         if (cursorY >= topLine + screenHeight - 2) {  // Adjust for status line
+    //             topLine++;  // Scroll down
+    //         }
+    //         cursorX = min(cursorX, (int)text[cursorY].length());
+    //     }
+    // }
+
+    // void moveCursorUp() {
+    //     if (cursorY > 0) {
+    //         cursorY--;
+    //         // Check if the cursor is now above the top of the visible area
+    //         if (cursorY < topLine) {
+    //             topLine--;  // Scroll up
+    //         }
+    //         cursorX = min(cursorX, (int)text[cursorY].length());
+    //     } else {
+    //         cursorY = 0; // Ensure it doesn't go below zero
+    //     }
+    // }
 
     void moveCursorLeft() {
         if (cursorX > 0) {
