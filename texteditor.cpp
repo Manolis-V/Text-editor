@@ -104,6 +104,7 @@ private:
     int cursorY = 0; 
     int previousCursorX = 0; // Previous cursor X position
     int previousCursorY = 0; // Previous cursor Y position
+    int topLine = 0;  // Variable to track the top line currently displayed
     int screenWidth, screenHeight; 
     string statusMessage; 
     bool inCommandMode;
@@ -113,12 +114,12 @@ private:
         clear(); // Clear the screen to avoid previous content being shown
 
         // Display all lines of text
-        for (int i = 0; i < text.size(); ++i) {
+        for (int i = 0; i < int(text.size()); ++i) {
             mvprintw(i, 4, "%s", text[i].c_str()); // Print each line
         }
 
         // Display line numbers for all lines
-        for (int i = 0; i < text.size(); ++i) {
+        for (int i = 0; i < int(text.size()); ++i) {
             attron(COLOR_PAIR(1)); // Turn on line number color
             mvprintw(i, 0, "%2d: ", i + 1); // Print line number
             attroff(COLOR_PAIR(1)); // Turn off line number color
@@ -159,17 +160,27 @@ private:
         previousCursorY = cursorY;
     }
 
-    void moveCursorUp() {
-        if (cursorY > 0) {
-            cursorY--;
+    void moveCursorDown() {
+        if (cursorY < int(text.size()) - 1) {
+            cursorY++;
+            // Check if the cursor is now beyond the bottom of the visible area
+            if (cursorY >= topLine + screenHeight - 2) {  // Adjust for status line
+                topLine++;  // Scroll down
+            }
             cursorX = min(cursorX, (int)text[cursorY].length());
         }
     }
 
-    void moveCursorDown() {
-        if (cursorY < int(text.size()) - 1) {
-            cursorY++;
+    void moveCursorUp() {
+        if (cursorY > 0) {
+            cursorY--;
+            // Check if the cursor is now above the top of the visible area
+            if (cursorY < topLine) {
+                topLine--;  // Scroll up
+            }
             cursorX = min(cursorX, (int)text[cursorY].length());
+        } else {
+            cursorY = 0; // Ensure it doesn't go below zero
         }
     }
 

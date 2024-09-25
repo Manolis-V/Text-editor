@@ -65,18 +65,24 @@ public:
 
     void loadFile(const string& filename) {
         ifstream file(filename);
-        if (!file) return;
-        text.clear();  
+        if (!file) return; // If the file can't be opened, do nothing
+        
+        text.clear(); // Clear previous text
         string line;
         while (getline(file, line)) {
-            text.push_back(line);
+            text.push_back(line); // Load lines from the file into the text vector
         }
         file.close();
 
-        // Full refresh after loading a file
-        clear();
-        previousCursorY = 0; // Reset previous cursor positions
+        // Reset cursor position and previous cursor tracking
+        cursorY = 0; // Start at the top of the file
+        cursorX = 0; // Start at the beginning of the first line
+        previousCursorY = 0; // Reset previous cursor position
         previousCursorX = 0;
+
+        // Clear the screen and display the loaded text
+        clear();
+        displayAllText(); // Call displayText to show the content of the loaded file
     }
 
     void saveFile(const string& filename) {
@@ -98,28 +104,48 @@ private:
     int cursorY = 0; 
     int previousCursorX = 0; // Previous cursor X position
     int previousCursorY = 0; // Previous cursor Y position
+    int topLine = 0;  // Variable to track the top line currently displayed
     int screenWidth, screenHeight; 
     string statusMessage; 
     bool inCommandMode;
     string commandBuffer;
 
+    void displayAllText() {
+        clear(); // Clear the screen to avoid previous content being shown
+
+        // Display all lines of text
+        for (int i = 0; i < text.size(); ++i) {
+            mvprintw(i, 4, "%s", text[i].c_str()); // Print each line
+        }
+
+        // Display line numbers for all lines
+        for (int i = 0; i < text.size(); ++i) {
+            attron(COLOR_PAIR(1)); // Turn on line number color
+            mvprintw(i, 0, "%2d: ", i + 1); // Print line number
+            attroff(COLOR_PAIR(1)); // Turn off line number color
+        }
+
+        // Move cursor to the correct position
+        move(cursorY, cursorX + 4);  // Adjust cursor position to account for line numbers
+        refresh(); // Refresh the screen to update the display
+    }
+
     void displayText() {
-        // Refresh only the necessary lines
+        // Refresh the current line and the line where the cursor was previously
         if (cursorY != previousCursorY) {
             // Clear the previous line
             mvprintw(previousCursorY, 4, "%s", text[previousCursorY].c_str()); 
         }
         
-        // Display the current line and line numbers
-        for (int i = 0; i < text.size(); ++i) {
+        // Display the current line
+        mvprintw(cursorY, 4, "%s", text[cursorY].c_str());
+
+        // Display line numbers for all lines
+        for (int i = 0; i < int(text.size()); ++i) {
             attron(COLOR_PAIR(1)); // Turn on line number color
             mvprintw(i, 0, "%2d: ", i + 1); // Print line number
             attroff(COLOR_PAIR(1)); // Turn off line number color
-            mvprintw(i, 4, "%s", text[i].c_str()); // Print line content
         }
-
-        // Refresh the current line
-        mvprintw(cursorY, 4, "%s", text[cursorY].c_str());
 
         attron(COLOR_PAIR(2)); // Turn on status message color
         mvprintw(screenHeight - 1, 0, statusMessage.c_str());
@@ -134,17 +160,27 @@ private:
         previousCursorY = cursorY;
     }
 
-    void moveCursorUp() {
-        if (cursorY > 0) {
-            cursorY--;
+    void moveCursorDown() {
+        if (cursorY < int(text.size()) - 1) {
+            cursorY++;
+            // Check if the cursor is now beyond the bottom of the visible area
+            if (cursorY >= topLine + screenHeight - 2) {  // Adjust for status line
+                topLine++;  // Scroll down
+            }
             cursorX = min(cursorX, (int)text[cursorY].length());
         }
     }
 
-    void moveCursorDown() {
-        if (cursorY < text.size() - 1) {
-            cursorY++;
+    void moveCursorUp() {
+        if (cursorY > 0) {
+            cursorY--;
+            // Check if the cursor is now above the top of the visible area
+            if (cursorY < topLine) {
+                topLine--;  // Scroll up
+            }
             cursorX = min(cursorX, (int)text[cursorY].length());
+        } else {
+            cursorY = 0; // Ensure it doesn't go below zero
         }
     }
 
@@ -158,9 +194,9 @@ private:
     }
 
     void moveCursorRight() {
-        if (cursorX < text[cursorY].length()) {
+        if (cursorX < int(text[cursorY].length())) {
             cursorX++;
-        } else if (cursorY < text.size() - 1) {
+        } else if (cursorY < int(text.size()) - 1) {
             cursorY++;
             cursorX = 0;
         }
@@ -181,6 +217,8 @@ private:
             text.erase(text.begin() + cursorY);
             cursorY--;
         }
+        // Call displayText to refresh only the necessary lines
+        displayText();
     }
 
     void insertNewline() {
@@ -247,6 +285,8 @@ private:
             saveFile("output.txt");
             endwin();
             exit(0);
+        } else if (commandBuffer == ":m") {
+            showFileMenu();
         } else {
             showStatusMessage("Unknown command");
         }
@@ -305,11 +345,6 @@ private:
         }
         saveFile(newFileName);  // Save the new file
         loadFile(newFileName);   // Load the new file into the editor
-
-        // Full refresh after creating a new file
-        clear();
-        previousCursorY = 0; // Reset previous cursor positions
-        previousCursorX = 0;
     }
 };
 
