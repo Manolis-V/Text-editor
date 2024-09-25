@@ -4,6 +4,7 @@
 #include <fstream>
 #include <chrono>
 #include <thread>
+#include <dirent.h> // For directory operations on UNIX systems
 
 using namespace std;
 
@@ -11,6 +12,9 @@ class Editor {
 public:
     Editor() {
         initscr();
+        start_color(); // Initialize color support
+        init_pair(1, COLOR_YELLOW, COLOR_BLACK); // Line number color
+        init_pair(2, COLOR_GREEN, COLOR_BLACK); // Status message color
         raw();                  
         keypad(stdscr, TRUE);    
         noecho();                
@@ -25,13 +29,14 @@ public:
     }
 
     void run() {
+        showFileMenu(); // Show file menu at the start
         while (true) {
             if (!inCommandMode) {
                 displayText();
                 int ch = getch();
 
                 if (ch == ':') {
-                    enterCommandMode();  // Enter command mode if ':' is pressed
+                    enterCommandMode();
                 } else if (ch == KEY_UP) {
                     moveCursorUp();
                 } else if (ch == KEY_DOWN) {
@@ -48,18 +53,18 @@ public:
                     insertChar(ch);
                 }
             } else {
-                handleCommandMode();  // Handle command input
+                handleCommandMode();
             }
         }
     }
 
     void loadFile(const string& filename) {
-        ifstream file(filename);  
+        ifstream file(filename);
         if (!file) return;
         text.clear();  
         string line;
         while (getline(file, line)) {
-            text.push_back(line);  
+            text.push_back(line);
         }
         file.close();
     }
@@ -71,7 +76,7 @@ public:
             return;
         }
         for (const auto& line : text) {
-            file << line << '\n';  
+            file << line << '\n';
         }
         file.close();
         showStatusMessage("File saved as " + filename);
@@ -88,11 +93,17 @@ private:
 
     void displayText() {
         clear();
-        for (int i = 0; i < int(text.size()); ++i) {
-            mvprintw(i, 0, text[i].c_str()); 
+        // Display the line numbers in yellow
+        for (int i = 0; i < text.size(); ++i) {
+            attron(COLOR_PAIR(1)); // Turn on line number color
+            mvprintw(i, 0, "%3d: ", i + 1); // Print line number
+            attroff(COLOR_PAIR(1)); // Turn off line number color
+            mvprintw(i, 4, "%s", text[i].c_str()); // Print line content
         }
-        mvprintw(screenHeight - 1, 0, statusMessage.c_str()); 
-        move(cursorY, cursorX); 
+        attron(COLOR_PAIR(2)); // Turn on status message color
+        mvprintw(screenHeight - 1, 0, statusMessage.c_str());
+        attroff(COLOR_PAIR(2)); // Turn off status message color
+        move(cursorY, cursorX + 4);  // Adjust cursor position to account for line numbers
         refresh();
     }
 
@@ -104,7 +115,7 @@ private:
     }
 
     void moveCursorDown() {
-        if (cursorY < int(text.size()) - 1) {
+        if (cursorY < text.size() - 1) {
             cursorY++;
             cursorX = min(cursorX, (int)text[cursorY].length());
         }
@@ -120,9 +131,9 @@ private:
     }
 
     void moveCursorRight() {
-        if (cursorX < int(text[cursorY].length())) {
+        if (cursorX < text[cursorY].length()) {
             cursorX++;
-        } else if (cursorY < int(text.size()) - 1) {
+        } else if (cursorY < text.size() - 1) {
             cursorY++;
             cursorX = 0;
         }
@@ -163,9 +174,9 @@ private:
 
     void enterCommandMode() {
         inCommandMode = true;
-        commandBuffer = ":";  // Start with ':'
-        move(screenHeight - 1, 0);  // Move cursor to the bottom of the screen
-        clrtoeol();  // Clear the command line area
+        commandBuffer = ":";  
+        move(screenHeight - 1, 0);  
+        clrtoeol();  
         printw(":");
         refresh();
     }
@@ -173,16 +184,16 @@ private:
     void handleCommandMode() {
         int ch = getch();
 
-        if (ch == '\n') {  // Handle enter key
+        if (ch == '\n') {
             executeCommand();
             inCommandMode = false;
             commandBuffer.clear();
-            statusMessage = "";  // Clear the status line
-        } else if (ch == 27) {  // Escape key to cancel command mode
+            statusMessage = "";  
+        } else if (ch == 27) {  
             inCommandMode = false;
             statusMessage = "";
             displayText();
-        } else if (ch == KEY_BACKSPACE || ch == 127) {  // Handle backspace in command mode
+        } else if (ch == KEY_BACKSPACE || ch == 127) {  
             if (!commandBuffer.empty()) {
                 commandBuffer.pop_back();
                 move(screenHeight - 1, 0);
@@ -202,18 +213,72 @@ private:
     void executeCommand() {
         if (commandBuffer == ":q") {
             endwin();
-            exit(0);  // Quit the editor
+            exit(0);  
         } else if (commandBuffer == ":w") {
-            saveFile("output.txt");  // Save the file
+            saveFile("output.txt");  
         } else {
             showStatusMessage("Unknown command");
         }
+    }
+
+    void showFileMenu() {
+        clear();
+        vector<string> files;
+
+        // Read all files in the current directory using dirent.h
+        DIR* dir;
+        struct dirent* entry;
+
+        if ((dir = opendir(".")) != nullptr) {
+            while ((entry = readdir(dir)) != nullptr) {
+                if (entry->d_type == DT_REG) {  // Only regular files
+                    files.push_back(entry->d_name);
+                }
+            }
+            closedir(dir);
+        } else {
+            showStatusMessage("Failed to open directory.");
+            return;
+        }
+
+        // Display file menu
+        mvprintw(0, 0, "Select a file to edit:");
+        for (size_t i = 0; i < files.size(); ++i) {
+            mvprintw(i + 1, 0, "%zu. %s", i + 1, files[i].c_str());
+        }
+        mvprintw(files.size() + 2, 0, "Press '0' to create a new file.");
+        mvprintw(files.size() + 3, 0, "Press 'q' to exit.");
+        refresh();
+
+        int choice = getch();
+        if (choice == 'q') {
+            endwin();
+            exit(0);
+        } else if (choice == '0') {
+            createNewFile();
+        } else if (choice >= '1' && choice <= '9' && (size_t)(choice - '1') < files.size()) {
+            loadFile(files[choice - '1']);  // Load selected file
+        }
+    }
+
+    void createNewFile() {
+        clear();
+        mvprintw(0, 0, "Enter new file name: ");
+        refresh();
+        string newFileName;
+        char ch;
+        while ((ch = getch()) != '\n') {  // Get new file name
+            newFileName.push_back(ch);
+            printw("%c", ch);
+            refresh();
+        }
+        saveFile(newFileName);  // Save the new file
+        loadFile(newFileName);   // Load the new file into the editor
     }
 };
 
 int main() {
     Editor editor;
-    editor.loadFile("output.txt");  // Load text from a file (optional)
     editor.run();
     return 0;
 }

@@ -90,11 +90,12 @@ private:
 
     void displayText() {
         clear();
-        for (int i = 0; i < text.size(); ++i) {
-            mvprintw(i, 0, text[i].c_str());
+        // Display the line numbers
+        for (int i = 0; i < int(text.size()); ++i) {
+            mvprintw(i, 0, "%2d: %s", i + 1, text[i].c_str());  // Print line number
         }
         mvprintw(screenHeight - 1, 0, statusMessage.c_str());
-        move(cursorY, cursorX);
+        move(cursorY, cursorX + 4);  // Adjust cursor position to account for line numbers
         refresh();
     }
 
@@ -106,7 +107,7 @@ private:
     }
 
     void moveCursorDown() {
-        if (cursorY < text.size() - 1) {
+        if (cursorY < int(text.size()) - 1) {
             cursorY++;
             cursorX = min(cursorX, (int)text[cursorY].length());
         }
@@ -122,9 +123,9 @@ private:
     }
 
     void moveCursorRight() {
-        if (cursorX < text[cursorY].length()) {
+        if (cursorX < int(text[cursorY].length())) {
             cursorX++;
-        } else if (cursorY < text.size() - 1) {
+        } else if (cursorY < int(text.size()) - 1) {
             cursorY++;
             cursorX = 0;
         }
@@ -159,7 +160,7 @@ private:
         statusMessage = message;
         displayText();
         refresh();
-        this_thread::sleep_for(chrono::seconds(2)); 
+        this_thread::sleep_for(chrono::seconds(1)); 
         statusMessage = ""; 
     }
 
@@ -207,6 +208,10 @@ private:
             exit(0);  
         } else if (commandBuffer == ":w") {
             saveFile("output.txt");  
+        } else if (commandBuffer == ":wq") {
+            saveFile("output.txt");  
+            endwin();
+            exit(0); 
         } else {
             showStatusMessage("Unknown command");
         }
