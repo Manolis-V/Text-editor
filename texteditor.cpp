@@ -283,9 +283,13 @@ private:
             text.erase(text.begin() + cursorY);  // Remove the current line
             cursorY--;  // Move the cursor up
 
-            // After merging lines, clear the line where the original line was
-            move(cursorY + 1, 4); // Move to the line that was merged and is now removed (adjust for line numbers)
-            clrtoeol();  // Clear the line to remove any leftover characters
+            // // After merging lines, clear the line where the original line was
+            // move(cursorY + 1, 4); // Move to the line that was merged and is now removed (adjust for line numbers)
+            // clrtoeol();  // Clear the line to remove any leftover characters
+            for (int i=1; i<int(text.size()); i++) {
+                move(cursorY + i, 4);
+                clrtoeol();
+            }
         }
 
         // Clear the rest of the current line to handle any leftover characters
