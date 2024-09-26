@@ -129,56 +129,56 @@ private:
         move(cursorY, cursorX + 4);  // Adjust cursor position to account for line numbers
         refresh(); // Refresh the screen to update the display
     }
-    // void displayText() {
-    //     int visibleLines = screenHeight - 2;  // Adjust for the status line at the bottom
-
-    //     // Display only the lines that fit within the screen, starting from `topLine`
-    //     for (int i = 0; i < visibleLines && i + topLine < int(text.size()); ++i) {
-    //         mvprintw(i, 5, "%s", text[i + topLine].c_str()); // Print each line
-    //     }
-
-    //     // Display line numbers for all visible lines
-    //     for (int i = 0; i < visibleLines && i + topLine < int(text.size()); ++i) {
-    //         attron(COLOR_PAIR(1)); // Turn on line number color
-    //         mvprintw(i, 0, "%3d: ", i + 1 + topLine); // Print line number
-    //         attroff(COLOR_PAIR(1)); // Turn off line number color
-    //     }
-
-    //     // Move cursor to the correct position, adjusting for scrolling
-    //     int visibleCursorY = cursorY - topLine;
-    //     move(visibleCursorY, cursorX + 5);  // Adjust cursor position to account for line numbers
-    //     refresh(); // Refresh the screen to update the display
-    // }
-
     void displayText() {
-        // Refresh the current line and the line where the cursor was previously
-        if (cursorY != previousCursorY) {
-            // Clear the previous line
-            mvprintw(previousCursorY, 4, "%s", text[previousCursorY].c_str()); 
-        }
-        
-        // Display the current line
-        mvprintw(cursorY, 4, "%s", text[cursorY].c_str());
+        int visibleLines = screenHeight - 2;  // Adjust for the status line at the bottom
 
-        // Display line numbers for all lines
-        for (int i = 0; i < int(text.size()); ++i) {
+        // Display only the lines that fit within the screen, starting from `topLine`
+        for (int i = 0; i < visibleLines && i + topLine < int(text.size()); ++i) {
+            mvprintw(i, 5, "%s", text[i + topLine].c_str()); // Print each line
+        }
+
+        // Display line numbers for all visible lines
+        for (int i = 0; i < visibleLines && i + topLine < int(text.size()); ++i) {
             attron(COLOR_PAIR(1)); // Turn on line number color
-            mvprintw(i, 0, "%2d: ",  i + 1 + topLine); // Print line number
+            mvprintw(i, 0, "%3d: ", i + 1 + topLine); // Print line number
             attroff(COLOR_PAIR(1)); // Turn off line number color
         }
 
-        attron(COLOR_PAIR(2)); // Turn on status message color
-        mvprintw(screenHeight - 1, 0, statusMessage.c_str());
-        attroff(COLOR_PAIR(2)); // Turn off status message color
-        
-        // Move cursor to the correct position
-        move(cursorY, cursorX + 4);  // Adjust cursor position to account for line numbers
-        refresh();
-
-        // Update the previous cursor position
-        previousCursorX = cursorX;
-        previousCursorY = cursorY;
+        // Move cursor to the correct position, adjusting for scrolling
+        int visibleCursorY = cursorY - topLine;
+        move(visibleCursorY, cursorX + 5);  // Adjust cursor position to account for line numbers
+        refresh(); // Refresh the screen to update the display
     }
+
+    // void displayText() {
+    //     // Refresh the current line and the line where the cursor was previously
+    //     if (cursorY != previousCursorY) {
+    //         // Clear the previous line
+    //         mvprintw(previousCursorY, 4, "%s", text[previousCursorY].c_str()); 
+    //     }
+        
+    //     // Display the current line
+    //     mvprintw(cursorY, 4, "%s", text[cursorY].c_str());
+
+    //     // Display line numbers for all lines
+    //     for (int i = 0; i < int(text.size()); ++i) {
+    //         attron(COLOR_PAIR(1)); // Turn on line number color
+    //         mvprintw(i, 0, "%2d: ",  i + 1 + topLine); // Print line number
+    //         attroff(COLOR_PAIR(1)); // Turn off line number color
+    //     }
+
+    //     attron(COLOR_PAIR(2)); // Turn on status message color
+    //     mvprintw(screenHeight - 1, 0, statusMessage.c_str());
+    //     attroff(COLOR_PAIR(2)); // Turn off status message color
+        
+    //     // Move cursor to the correct position
+    //     move(cursorY, cursorX + 4);  // Adjust cursor position to account for line numbers
+    //     refresh();
+
+    //     // Update the previous cursor position
+    //     previousCursorX = cursorX;
+    //     previousCursorY = cursorY;
+    // }
 
     void scrollDown() {
         int visibleLines = screenHeight - 2; // Number of visible lines on the screen
@@ -207,19 +207,20 @@ private:
         if (cursorY < topLine) {
             topLine--;  // Scroll the view up
 
-            // Clear the bottom line and shift the rest of the lines down by one
-            move(screenHeight - 2, 0);
-            insdelln(1);  // Insert a line at the bottom (scrolling down the rest)
+            // Move all lines down by 1 on the screen to simulate scrolling up
+            move(0, 0);  // Move cursor to the top of the screen
+            insdelln(1);  // Insert a blank line at the top (pushing lines down)
 
             // Render the new top line
             mvprintw(0, 4, "%s", text[topLine].c_str());  // Print the new top line
             attron(COLOR_PAIR(1));  // Line number color
-            mvprintw(0, 0, "%2d: ", topLine + 1);  // Print line number
+            mvprintw(0, 0, "%3d: ", topLine + 1);  // Print the line number for the new top line
             attroff(COLOR_PAIR(1));  // Turn off line number color
 
-            refresh();
+            refresh();  // Refresh the screen to reflect changes
         }
     }
+
 
     void moveCursorDown() {
         if (cursorY < int(text.size()) - 1) {
@@ -246,29 +247,6 @@ private:
             refresh();
         }
     }
-    // void moveCursorDown() {
-    //     if (cursorY < int(text.size()) - 1) {
-    //         cursorY++;
-    //         // Check if the cursor is now beyond the bottom of the visible area
-    //         if (cursorY >= topLine + screenHeight - 2) {  // Adjust for status line
-    //             topLine++;  // Scroll down
-    //         }
-    //         cursorX = min(cursorX, (int)text[cursorY].length());
-    //     }
-    // }
-
-    // void moveCursorUp() {
-    //     if (cursorY > 0) {
-    //         cursorY--;
-    //         // Check if the cursor is now above the top of the visible area
-    //         if (cursorY < topLine) {
-    //             topLine--;  // Scroll up
-    //         }
-    //         cursorX = min(cursorX, (int)text[cursorY].length());
-    //     } else {
-    //         cursorY = 0; // Ensure it doesn't go below zero
-    //     }
-    // }
 
     void moveCursorLeft() {
         if (cursorX > 0) {
@@ -295,15 +273,26 @@ private:
 
     void backspace() {
         if (cursorX > 0) {
+            // Remove the character at the cursor position
             text[cursorY].erase(cursorX - 1, 1);
             cursorX--;
         } else if (cursorY > 0) {
+            // If at the start of the line, merge with the previous line
             cursorX = text[cursorY - 1].length();
-            text[cursorY - 1] += text[cursorY];
-            text.erase(text.begin() + cursorY);
-            cursorY--;
+            text[cursorY - 1] += text[cursorY];  // Merge the lines
+            text.erase(text.begin() + cursorY);  // Remove the current line
+            cursorY--;  // Move the cursor up
+
+            // After merging lines, clear the line where the original line was
+            move(cursorY + 1, 4); // Move to the line that was merged and is now removed (adjust for line numbers)
+            clrtoeol();  // Clear the line to remove any leftover characters
         }
-        // Call displayText to refresh only the necessary lines
+
+        // Clear the rest of the current line to handle any leftover characters
+        move(cursorY, 4); // Move to the correct line (offset by 5 for line numbers)
+        clrtoeol();  // Clear from cursor to the end of the line
+
+        // Refresh the entire screen to reflect the changes
         displayText();
     }
 
