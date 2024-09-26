@@ -12,6 +12,9 @@ class Editor {
 public:
     Editor() {
         initscr();
+        start_color(); // Initialize color support
+        init_pair(1, COLOR_YELLOW, COLOR_BLACK); // Line number color
+        init_pair(2, COLOR_GREEN, COLOR_BLACK); // Status message color
         raw();                  
         keypad(stdscr, TRUE);    
         noecho();                
@@ -19,6 +22,10 @@ public:
         getmaxyx(stdscr, screenHeight, screenWidth); 
         statusMessage = "";
         inCommandMode = false;
+
+        // Initialize cursor position variables
+        previousCursorY = 0;
+        previousCursorX = 0;
     }
 
     ~Editor() {
@@ -64,6 +71,16 @@ public:
             text.push_back(line);
         }
         file.close();
+
+        // Reset cursor position and previous cursor tracking
+        cursorY = 0; // Start at the top of the file
+        cursorX = 0; // Start at the beginning of the first line
+        previousCursorY = 0; // Reset previous cursor position
+        previousCursorX = 0;
+
+        // Clear the screen and display the loaded text
+        clear();
+        displayAllText(); // Call displayText to show the content of the loaded file
     }
 
     void saveFile(const string& filename) {
@@ -83,35 +100,117 @@ private:
     vector<string> text = {""}; 
     int cursorX = 0; 
     int cursorY = 0; 
+    int previousCursorX = 0; // Previous cursor X position
+    int previousCursorY = 0; // Previous cursor Y position
+    int topLine = 0;  // Variable to track the top line currently displayed
     int screenWidth, screenHeight; 
     string statusMessage; 
     bool inCommandMode;
     string commandBuffer;
 
-    void displayText() {
-        clear();
-        for (int i = 0; i < text.size(); ++i) {
-            mvprintw(i, 0, text[i].c_str());
+
+    void displayAllText() {
+        clear(); // Clear the screen to avoid previous content being shown
+        int visibleLines = screenHeight - 1;  // Adjust for the status line at the bottom
+
+        // Display line numbers for all lines
+        for (int i = 0; i < visibleLines; ++i) {
+            mvprintw(i, 6, "%s", text[i].c_str()); // Print each line
+            attron(COLOR_PAIR(1)); // Turn on line number color
+            mvprintw(i, 0, "%4d: ", i + 1); // Print line number
+            attroff(COLOR_PAIR(1)); // Turn off line number color
         }
-        mvprintw(screenHeight - 1, 0, statusMessage.c_str());
-        move(cursorY, cursorX);
-        refresh();
+        
+        // Move cursor to the correct position
+        move(cursorY, cursorX + 6);  // Adjust cursor position to account for line numbers
+        refresh(); // Refresh the screen to update the display
+    }
+
+    void displayText() {
+        int visibleLines = screenHeight - 1;  // Adjust for the status line at the bottom
+
+        // Display line numbers for all visible lines
+        for (int i = 0; i < visibleLines && i + topLine < int(text.size()); ++i) {
+            mvprintw(i, 6, "%s", text[i + topLine].c_str()); // Print each line
+            attron(COLOR_PAIR(1)); // Turn on line number color
+            mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
+            attroff(COLOR_PAIR(1)); // Turn off line number color
+        }
+
+        mvprintw(screenHeight - 1, 0, statusMessage.c_str()); 
+        // Move cursor to the correct position, adjusting for scrolling
+        int visibleCursorY = cursorY - topLine;
+        move(visibleCursorY, cursorX + 6);  // Adjust cursor position to account for line numbers
+        refresh(); // Refresh the screen to update the display
+    }
+
+    void scrollDown() {
+        int visibleLines = screenHeight - 1; // Number of visible lines on the screen
+
+        // Only scroll if the cursor is at the bottom of the screen
+        if (cursorY >= topLine + visibleLines - 2) {
+            topLine++;  // Scroll the view down
+
+            // Clear the top line and shift the rest of the lines up by one
+            move(0, 1);
+            insdelln(-1);  // Delete the top line (scrolling up the rest)
+
+            // Render the new bottom line
+            int newLineIndex = topLine + visibleLines - 1;  // Index of the new bottom line
+            if (newLineIndex < int(text.size())) {
+                mvprintw(visibleLines - 1, 4, "%s", text[newLineIndex].c_str()); // Print the new line
+                attron(COLOR_PAIR(1));  // Line number color
+                mvprintw(visibleLines - 1, 0, "%2d: ", newLineIndex + 1); // Print line number
+                attroff(COLOR_PAIR(1));  // Turn off line number color
+            }
+            refresh();
+        }
+    }
+
+    void scrollUp() {
+        if (cursorY < topLine + 2 && topLine != 0) {
+            topLine--;  // Scroll the view up
+
+            // Move all lines down by 1 on the screen to simulate scrolling up
+            move(0, 1);  // Move cursor to the top of the screen
+            insdelln(1);  // Insert a blank line at the top (pushing lines down)
+
+            // Render the new top line
+            mvprintw(0, 4, "%s", text[topLine].c_str());  // Print the new top line
+            attron(COLOR_PAIR(1));  // Line number color
+            mvprintw(0, 0, "%3d: ", topLine + 1);  // Print the line number for the new top line
+            attroff(COLOR_PAIR(1));  // Turn off line number color
+
+            refresh();  // Refresh the screen to reflect changes
+        }
     }
 
     void moveCursorUp() {
         if (cursorY > 0) {
             cursorY--;
+            scrollUp();  // Scroll up if needed
             cursorX = min(cursorX, (int)text[cursorY].length());
+
+            // Move the cursor to the correct position on screen
+            int visibleCursorY = cursorY - topLine;
+            move(visibleCursorY, cursorX + 6);  // Adjust for line numbers
+            refresh();
         }
     }
 
     void moveCursorDown() {
-        if (cursorY < text.size() - 1) {
+        if (cursorY < int(text.size())) {// -1
             cursorY++;
+            scrollDown();  // Scroll down if needed
             cursorX = min(cursorX, (int)text[cursorY].length());
+
+            // Move the cursor to the correct position on screen
+            int visibleCursorY = cursorY - topLine;
+            move(visibleCursorY, cursorX + 6);  // Adjust for line numbers
+            refresh();
         }
     }
-
+    // okey
     void moveCursorLeft() {
         if (cursorX > 0) {
             cursorX--;
@@ -120,11 +219,11 @@ private:
             cursorX = text[cursorY].length();
         }
     }
-
+    // okey
     void moveCursorRight() {
-        if (cursorX < text[cursorY].length()) {
+        if (cursorX < int(text[cursorY].length())) {
             cursorX++;
-        } else if (cursorY < text.size() - 1) {
+        } else if (cursorY < int(text.size()) - 1) {
             cursorY++;
             cursorX = 0;
         }
@@ -137,14 +236,29 @@ private:
 
     void backspace() {
         if (cursorX > 0) {
+            // When in line changes
             text[cursorY].erase(cursorX - 1, 1);
             cursorX--;
         } else if (cursorY > 0) {
+            // When changing line
             cursorX = text[cursorY - 1].length();
             text[cursorY - 1] += text[cursorY];
             text.erase(text.begin() + cursorY);
             cursorY--;
+            // Refreshes without glich 
+            for (int i=1; i<int(text.size())-1; i++) {
+                move(cursorY + i, 6);
+                clrtoeol();
+            }
+
+        } else {
+            // When in the initial possition
+            return;
         }
+
+        // Clear the rest of the current line to handle any leftover characters
+        move(cursorY, 6); // Move to the correct line (offset by 5 for line numbers)
+        clrtoeol();  // Clear from cursor to the end of the line
     }
 
     void insertNewline() {
@@ -159,7 +273,7 @@ private:
         statusMessage = message;
         displayText();
         refresh();
-        this_thread::sleep_for(chrono::seconds(2)); 
+        this_thread::sleep_for(chrono::seconds(1)); 
         statusMessage = ""; 
     }
 
@@ -204,9 +318,15 @@ private:
     void executeCommand() {
         if (commandBuffer == ":q") {
             endwin();
-            exit(0);  
+            exit(0);
         } else if (commandBuffer == ":w") {
-            saveFile("output.txt");  
+            saveFile("output.txt");
+        } else if (commandBuffer == ":wq") {
+            saveFile("output.txt");
+            endwin();
+            exit(0);
+        } else if (commandBuffer == ":m") {
+            showFileMenu();
         } else {
             showStatusMessage("Unknown command");
         }
