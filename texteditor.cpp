@@ -23,9 +23,6 @@ public:
         statusMessage = "";
         inCommandMode = false;
 
-        // Initialize cursor position variables
-        previousCursorY = 0;
-        previousCursorX = 0;
     }
 
     ~Editor() {
@@ -80,7 +77,7 @@ public:
 
         // Clear the screen and display the loaded text
         clear();
-        displayAllText(); // Call displayText to show the content of the loaded file
+        displayText(); // Call displayText to show the content of the loaded file
     }
 
     void saveFile(const string& filename) {
@@ -107,27 +104,11 @@ private:
     string statusMessage; 
     bool inCommandMode;
     string commandBuffer;
+    bool allText = true;
 
-
-    void displayAllText() {
-        clear(); // Clear the screen to avoid previous content being shown
-        int visibleLines = screenHeight - 1;  // Adjust for the status line at the bottom
-
-        // Display line numbers for all lines
-        for (int i = 0; i < visibleLines; ++i) {
-            mvprintw(i, 6, "%s", text[i].c_str()); // Print each line
-            attron(COLOR_PAIR(1)); // Turn on line number color
-            mvprintw(i, 0, "%4d: ", i + 1); // Print line number
-            attroff(COLOR_PAIR(1)); // Turn off line number color
-        }
-        
-        // Move cursor to the correct position
-        move(cursorY, cursorX + 6);  // Adjust cursor position to account for line numbers
-        refresh(); // Refresh the screen to update the display
-    }
 
     void displayText() {
-        int visibleLines = screenHeight - 1;  // Adjust for the status line at the bottom
+        int visibleLines = screenHeight;  // Adjust for the status line at the bottom
 
         // Display line numbers for all visible lines
         for (int i = 0; i < visibleLines && i + topLine < int(text.size()); ++i) {
@@ -137,7 +118,7 @@ private:
             attroff(COLOR_PAIR(1)); // Turn off line number color
         }
 
-        mvprintw(screenHeight - 1, 0, statusMessage.c_str()); 
+        // mvprintw(screenHeight - 1, 0, statusMessage.c_str()); 
         // Move cursor to the correct position, adjusting for scrolling
         int visibleCursorY = cursorY - topLine;
         move(visibleCursorY, cursorX + 6);  // Adjust cursor position to account for line numbers
@@ -145,24 +126,24 @@ private:
     }
 
     void scrollDown() {
-        int visibleLines = screenHeight - 1; // Number of visible lines on the screen
+        int visibleLines = screenHeight; // Number of visible lines on the screen
 
         // Only scroll if the cursor is at the bottom of the screen
-        if (cursorY >= topLine + visibleLines - 2) {
+        if (cursorY >= topLine + visibleLines - 2 && topLine + screenHeight != (int)text.size()) {
             topLine++;  // Scroll the view down
 
             // Clear the top line and shift the rest of the lines up by one
-            move(0, 1);
+            move(0, 1);  // Adjust for line numbers
             insdelln(-1);  // Delete the top line (scrolling up the rest)
-
+            
             // Render the new bottom line
             int newLineIndex = topLine + visibleLines - 1;  // Index of the new bottom line
-            if (newLineIndex < int(text.size())) {
-                mvprintw(visibleLines - 1, 4, "%s", text[newLineIndex].c_str()); // Print the new line
-                attron(COLOR_PAIR(1));  // Line number color
-                mvprintw(visibleLines - 1, 0, "%2d: ", newLineIndex + 1); // Print line number
-                attroff(COLOR_PAIR(1));  // Turn off line number color
-            }
+
+            mvprintw(visibleLines - 1, 4, "%s", text[newLineIndex].c_str()); // Print the new line
+            attron(COLOR_PAIR(1));  // Line number color
+            mvprintw(visibleLines - 1, 0, "%3d: ", newLineIndex); // Print line number
+            attroff(COLOR_PAIR(1));  // Turn off line number color
+            
             refresh();
         }
     }
@@ -199,7 +180,7 @@ private:
     }
 
     void moveCursorDown() {
-        if (cursorY < int(text.size())) {// -1
+        if (cursorY < int(text.size()) - 1) {
             cursorY++;
             scrollDown();  // Scroll down if needed
             cursorX = min(cursorX, (int)text[cursorY].length());
@@ -214,7 +195,9 @@ private:
     void moveCursorLeft() {
         if (cursorX > 0) {
             cursorX--;
-        } else if (cursorY > 0) {
+        } else if (cursorY < topLine + 2 && topLine != 0) {
+            moveCursorUp();
+        }  else if (cursorY > 0) {
             cursorY--;
             cursorX = text[cursorY].length();
         }
@@ -223,6 +206,8 @@ private:
     void moveCursorRight() {
         if (cursorX < int(text[cursorY].length())) {
             cursorX++;
+        } else if (cursorY >= topLine + screenHeight - 2 && topLine + screenHeight != (int)text.size()) {
+            moveCursorDown();
         } else if (cursorY < int(text.size()) - 1) {
             cursorY++;
             cursorX = 0;
@@ -234,39 +219,46 @@ private:
         cursorX++;
     }
 
+            
     void backspace() {
         if (cursorX > 0) {
             // When in line changes
             text[cursorY].erase(cursorX - 1, 1);
             cursorX--;
         } else if (cursorY > 0) {
-            // When changing line
+            // When changing lines
             cursorX = text[cursorY - 1].length();
             text[cursorY - 1] += text[cursorY];
             text.erase(text.begin() + cursorY);
             cursorY--;
-            // Refreshes without glich 
-            for (int i=1; i<int(text.size())-1; i++) {
+            for (int i=0; i<int(text.size()); i++) {
                 move(cursorY + i, 6);
                 clrtoeol();
             }
-
+            insdelln(-1);
+            refresh(); 
         } else {
             // When in the initial possition
             return;
         }
-
         // Clear the rest of the current line to handle any leftover characters
         move(cursorY, 6); // Move to the correct line (offset by 5 for line numbers)
         clrtoeol();  // Clear from cursor to the end of the line
     }
 
+    // for one \n it copies to text above
     void insertNewline() {
         string newLine = text[cursorY].substr(cursorX);
         text[cursorY] = text[cursorY].substr(0, cursorX);
         text.insert(text.begin() + cursorY + 1, newLine);
-        cursorY++;
         cursorX = 0;
+        for (int i=0; i<int(text.size()); i++) {
+            move(cursorY + i, 6);
+            clrtoeol();
+        }
+        cursorY++;
+        insdelln(1);
+        refresh(); 
     }
 
     void showStatusMessage(const string& message) {
@@ -335,7 +327,6 @@ private:
     void showFileMenu() {
         clear();
         vector<string> files;
-
         // Read all files in the current directory using dirent.h
         DIR* dir;
         struct dirent* entry;
