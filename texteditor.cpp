@@ -2,26 +2,35 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <iostream>
 #include <chrono>
 #include <thread>
 #include <dirent.h> // For directory operations on UNIX systems
+// #include "syntax_highlighter.cpp" // Include the generated lexer
 
 using namespace std;
+// Declare the lexer function
+extern "C" int yylex();
+
 
 class Editor {
 public:
     Editor() {
         initscr();  // Start ncurses mode
         start_color(); // Initialize color support
-        init_pair(1, COLOR_YELLOW, COLOR_BLACK); // Line number color
-        init_pair(2, COLOR_GREEN, COLOR_BLACK); // Status message color
+        init_pair(1, COLOR_GREEN, COLOR_BLACK);   // Keywords
+        init_pair(2, COLOR_YELLOW, COLOR_BLACK);  // Strings
+        init_pair(3, COLOR_CYAN, COLOR_BLACK);    // Comments
+        init_pair(4, COLOR_RED, COLOR_BLACK);     // Numbers
+   
+   
+        init_pair(5, COLOR_WHITE, COLOR_BLACK);   // Identifiers/Functions
+        init_pair(13, COLOR_WHITE, 234);
+        init_pair(14, 106, 234);
 
-        init_pair(3, COLOR_WHITE, 234);
-        init_pair(4, 106, 234);
-
-        init_pair(5, 107, 235);
-        init_pair(6, COLOR_WHITE, 235);
-        bkgd(COLOR_PAIR(3));
+        init_pair(15, 107, 235);
+        init_pair(16, COLOR_WHITE, 235);
+        bkgd(COLOR_PAIR(13));
 
         raw();                  
         keypad(stdscr, TRUE);    
@@ -29,11 +38,9 @@ public:
         curs_set(1);             
         getmaxyx(stdscr, screenHeight, screenWidth); 
         statusMessage = "";
+        file_opened = "";
         inCommandMode = false;
 
-        // WINDOW* win = newwin(height, width, start_y, start_x);
-        // wbkgd(win, COLOR_PAIR(1)); // Set background for this window
-        // wrefresh(win);             // Refresh the window
     }
 
     ~Editor() {
@@ -57,7 +64,7 @@ public:
                     moveCursorLeft();
                 } else if (ch == KEY_RIGHT) {
                     moveCursorRight();
-                } else if (ch == KEY_BACKSPACE || ch == 127) {
+                }  else if (ch == KEY_BACKSPACE || ch == 127) {
                     backspace();
                 } else if (ch == '\n') {
                     insertNewline();
@@ -114,7 +121,7 @@ private:
     int previousCursorY = 0; // Previous cursor Y position
     int topLine = 0;  // Variable to track the top line currently displayed
     int screenWidth, screenHeight; 
-    string statusMessage; 
+    string statusMessage, file_opened; 
     bool inCommandMode;
     string commandBuffer;
     bool allText = true;
@@ -128,24 +135,24 @@ private:
             
             if ((i + topLine) == cursorY) {
                 
-                attron(COLOR_PAIR(5)); // Turn on line number color
+                attron(COLOR_PAIR(15)); // Turn on line number color
                 mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
-                attroff(COLOR_PAIR(5)); // Turn off line number color 
+                attroff(COLOR_PAIR(15)); // Turn off line number color 
   
-                attron(COLOR_PAIR(6)); // Turn on line number color
+                attron(COLOR_PAIR(16)); // Turn on line number color
                 for (int j = 0; j < screenWidth; j++) {
                     addch(' ');
                 }
                 mvprintw(i, 6, "%s", text[i + topLine].c_str()); // Print each line
-                attroff(COLOR_PAIR(6)); // Turn off line number color
+                attroff(COLOR_PAIR(16)); // Turn off line number color
                            
             } else {
                 //clrtoeol();
 
                 mvprintw(i, 6, "%s", text[i + topLine].c_str()); // Print each line
-                attron(COLOR_PAIR(4)); // Turn on line number color
+                attron(COLOR_PAIR(14)); // Turn on line number color
                 mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
-                attroff(COLOR_PAIR(4)); // Turn off line number color
+                attroff(COLOR_PAIR(14)); // Turn off line number color
             
                 
             }
@@ -254,11 +261,15 @@ private:
     }
 
     void insertChar(int ch) {
-        text[cursorY].insert(cursorX, 1, (char)ch);
-        cursorX++;
+        if ((char)ch == '\t') {
+            text[cursorY].insert(cursorX, 4, ' ');
+            cursorX = cursorX + 4;
+        } else {
+            text[cursorY].insert(cursorX, 1, (char)ch);
+            cursorX++;
+        }
     }
 
-            
     void backspace() {
         if (cursorX > 0) {
             // When in line changes
@@ -353,9 +364,9 @@ private:
             endwin();
             exit(0);
         } else if (commandBuffer == ":w") {
-            saveFile("output.txt");
+            saveFile(file_opened);
         } else if (commandBuffer == ":wq") {
-            saveFile("output.txt");
+            saveFile(file_opened);
             endwin();
             exit(0);
         } else if (commandBuffer == ":m") {
@@ -400,7 +411,8 @@ private:
         } else if (choice == '0') {
             createNewFile();
         } else if (choice >= '1' && choice <= '9' && (size_t)(choice - '1') < files.size()) {
-            loadFile(files[choice - '1']);  // Load selected file
+            file_opened = files[choice - '1'];
+            loadFile(file_opened);  // Load selected file
         }
     }
 
@@ -419,8 +431,12 @@ private:
         loadFile(newFileName);   // Load the new file into the editor
     }
 };
-
+int yylex()
+{
+    return 0;
+}
 int main() {
+    yylex();              // Run the lexer
     Editor editor;
     editor.run();
     return 0;

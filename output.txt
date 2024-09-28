@@ -79,8 +79,8 @@ public:
 
 private:
     vector<string> text = {""}; 
-    int cursorX = 0; 
-    int cursorY = 0; 
+    int cursorX = 0;
+    int cursorY = 0;
     int screenWidth, screenHeight; 
     string statusMessage; 
     bool inCommandMode;
