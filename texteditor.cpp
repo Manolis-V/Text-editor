@@ -22,7 +22,6 @@ public:
         getmaxyx(stdscr, screenHeight, screenWidth); 
         statusMessage = "";
         inCommandMode = false;
-
     }
 
     ~Editor() {
@@ -106,7 +105,6 @@ private:
     string commandBuffer;
     bool allText = true;
 
-
     void displayText() {
         int visibleLines = screenHeight;  // Adjust for the status line at the bottom
 
@@ -126,10 +124,9 @@ private:
     }
 
     void scrollDown() {
-        int visibleLines = screenHeight; // Number of visible lines on the screen
-
+        
         // Only scroll if the cursor is at the bottom of the screen
-        if (cursorY >= topLine + visibleLines - 2 && topLine + screenHeight != (int)text.size()) {
+        if (cursorY >= topLine + screenHeight - 2 && topLine + screenHeight != (int)text.size()) {
             topLine++;  // Scroll the view down
 
             // Clear the top line and shift the rest of the lines up by one
@@ -137,11 +134,11 @@ private:
             insdelln(-1);  // Delete the top line (scrolling up the rest)
             
             // Render the new bottom line
-            int newLineIndex = topLine + visibleLines - 1;  // Index of the new bottom line
+            int newLineIndex = topLine + screenHeight - 1;  // Index of the new bottom line
 
-            mvprintw(visibleLines - 1, 4, "%s", text[newLineIndex].c_str()); // Print the new line
+            mvprintw(screenHeight - 1, 4, "%s", text[newLineIndex].c_str()); // Print the new line
             attron(COLOR_PAIR(1));  // Line number color
-            mvprintw(visibleLines - 1, 0, "%3d: ", newLineIndex); // Print line number
+            mvprintw(screenHeight - 1, 0, "%3d: ", newLineIndex); // Print line number
             attroff(COLOR_PAIR(1));  // Turn off line number color
             
             refresh();
@@ -236,13 +233,13 @@ private:
                 clrtoeol();
             }
             insdelln(-1);
-            refresh(); 
+            refresh();
         } else {
             // When in the initial possition
             return;
         }
         // Clear the rest of the current line to handle any leftover characters
-        move(cursorY, 6); // Move to the correct line (offset by 5 for line numbers)
+        move(cursorY - topLine, 1); // Move to the correct line (offset by 5 for line numbers)
         clrtoeol();  // Clear from cursor to the end of the line
     }
 
