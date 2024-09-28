@@ -8,8 +8,8 @@ CXXFLAGS = -Wall -std=c++17
 TARGET = texteditor
 
 # Source files
-SRCS = texteditor.cpp
-
+#SRCS = texteditor.cpp
+SRCS = test.cpp
 # Object files (generated from source files)
 OBJS = $(SRCS:.cpp=.o)
 

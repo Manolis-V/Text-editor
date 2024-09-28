@@ -11,10 +11,18 @@ using namespace std;
 class Editor {
 public:
     Editor() {
-        initscr();
+        initscr();  // Start ncurses mode
         start_color(); // Initialize color support
         init_pair(1, COLOR_YELLOW, COLOR_BLACK); // Line number color
         init_pair(2, COLOR_GREEN, COLOR_BLACK); // Status message color
+
+        init_pair(3, COLOR_WHITE, 234);
+        init_pair(4, 106, 234);
+
+        init_pair(5, 107, 235);
+        init_pair(6, COLOR_WHITE, 235);
+        bkgd(COLOR_PAIR(3));
+
         raw();                  
         keypad(stdscr, TRUE);    
         noecho();                
@@ -22,6 +30,10 @@ public:
         getmaxyx(stdscr, screenHeight, screenWidth); 
         statusMessage = "";
         inCommandMode = false;
+
+        // WINDOW* win = newwin(height, width, start_y, start_x);
+        // wbkgd(win, COLOR_PAIR(1)); // Set background for this window
+        // wrefresh(win);             // Refresh the window
     }
 
     ~Editor() {
@@ -59,6 +71,14 @@ public:
     }
 
     void loadFile(const string& filename) {
+
+        // Reset cursor position and previous cursor tracking
+        cursorY = 0; // Start at the top of the file
+        cursorX = 0; // Start at the beginning of the first line
+        previousCursorY = 0; // Reset previous cursor position
+        previousCursorX = 0;
+        topLine = 0;
+
         ifstream file(filename);
         if (!file) return;
         text.clear();  
@@ -67,12 +87,6 @@ public:
             text.push_back(line);
         }
         file.close();
-
-        // Reset cursor position and previous cursor tracking
-        cursorY = 0; // Start at the top of the file
-        cursorX = 0; // Start at the beginning of the first line
-        previousCursorY = 0; // Reset previous cursor position
-        previousCursorX = 0;
 
         // Clear the screen and display the loaded text
         clear();
@@ -109,15 +123,39 @@ private:
         int visibleLines = screenHeight;  // Adjust for the status line at the bottom
 
         // Display line numbers for all visible lines
+        
         for (int i = 0; i < visibleLines && i + topLine < int(text.size()); ++i) {
-            mvprintw(i, 6, "%s", text[i + topLine].c_str()); // Print each line
-            attron(COLOR_PAIR(1)); // Turn on line number color
-            mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
-            attroff(COLOR_PAIR(1)); // Turn off line number color
+            
+            if ((i + topLine) == cursorY) {
+                
+                attron(COLOR_PAIR(5)); // Turn on line number color
+                mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
+                attroff(COLOR_PAIR(5)); // Turn off line number color 
+  
+                attron(COLOR_PAIR(6)); // Turn on line number color
+                for (int j = 0; j < screenWidth; j++) {
+                    addch(' ');
+                }
+                mvprintw(i, 6, "%s", text[i + topLine].c_str()); // Print each line
+                attroff(COLOR_PAIR(6)); // Turn off line number color
+                           
+            } else {
+                //clrtoeol();
+
+                mvprintw(i, 6, "%s", text[i + topLine].c_str()); // Print each line
+                attron(COLOR_PAIR(4)); // Turn on line number color
+                mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
+                attroff(COLOR_PAIR(4)); // Turn off line number color
+            
+                
+            }
         }
 
-        // mvprintw(screenHeight - 1, 0, statusMessage.c_str()); 
         // Move cursor to the correct position, adjusting for scrolling
+        // int visibleCursorY = previousCursorY - topLine;
+        // move(visibleCursorY, cursorX + 6);
+        // clrtoeol();
+        // refresh();
         int visibleCursorY = cursorY - topLine;
         move(visibleCursorY, cursorX + 6);  // Adjust cursor position to account for line numbers
         refresh(); // Refresh the screen to update the display
@@ -137,9 +175,9 @@ private:
             int newLineIndex = topLine + screenHeight - 1;  // Index of the new bottom line
 
             mvprintw(screenHeight - 1, 4, "%s", text[newLineIndex].c_str()); // Print the new line
-            attron(COLOR_PAIR(1));  // Line number color
+            attron(COLOR_PAIR(4));  // Line number color
             mvprintw(screenHeight - 1, 0, "%3d: ", newLineIndex); // Print line number
-            attroff(COLOR_PAIR(1));  // Turn off line number color
+            attroff(COLOR_PAIR(4));  // Turn off line number color
             
             refresh();
         }
@@ -155,10 +193,10 @@ private:
 
             // Render the new top line
             mvprintw(0, 4, "%s", text[topLine].c_str());  // Print the new top line
-            attron(COLOR_PAIR(1));  // Line number color
+            attron(COLOR_PAIR(4));  // Line number color
             mvprintw(0, 0, "%3d: ", topLine + 1);  // Print the line number for the new top line
-            attroff(COLOR_PAIR(1));  // Turn off line number color
-
+            attroff(COLOR_PAIR(4));  // Turn off line number color
+    
             refresh();  // Refresh the screen to reflect changes
         }
     }
@@ -166,6 +204,7 @@ private:
     void moveCursorUp() {
         if (cursorY > 0) {
             cursorY--;
+            clrtoeol();
             scrollUp();  // Scroll up if needed
             cursorX = min(cursorX, (int)text[cursorY].length());
 
@@ -179,6 +218,7 @@ private:
     void moveCursorDown() {
         if (cursorY < int(text.size()) - 1) {
             cursorY++;
+            clrtoeol();
             scrollDown();  // Scroll down if needed
             cursorX = min(cursorX, (int)text[cursorY].length());
 
@@ -190,6 +230,7 @@ private:
     }
     // okey
     void moveCursorLeft() {
+        clrtoeol();
         if (cursorX > 0) {
             cursorX--;
         } else if (cursorY < topLine + 2 && topLine != 0) {
@@ -201,6 +242,7 @@ private:
     }
     // okey
     void moveCursorRight() {
+        clrtoeol();
         if (cursorX < int(text[cursorY].length())) {
             cursorX++;
         } else if (cursorY >= topLine + screenHeight - 2 && topLine + screenHeight != (int)text.size()) {
@@ -243,7 +285,7 @@ private:
         clrtoeol();  // Clear from cursor to the end of the line
     }
 
-    // for one \n it copies to text above
+    // for one \n it copies the text above
     void insertNewline() {
         string newLine = text[cursorY].substr(cursorX);
         text[cursorY] = text[cursorY].substr(0, cursorX);
@@ -254,6 +296,8 @@ private:
             clrtoeol();
         }
         cursorY++;
+        move(cursorY - topLine, 1); // Move to the correct line (offset by 5 for line numbers)
+        clrtoeol();  // Clear from cursor to the end of the line
         insdelln(1);
         refresh(); 
     }
