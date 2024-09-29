@@ -6,11 +6,9 @@
 #include <chrono>
 #include <thread>
 #include <dirent.h> // For directory operations on UNIX systems
-// #include "syntax_highlighter.cpp" // Include the generated lexer
+#include "syntax_highlighter.h" // Include the header file for the lexer
 
 using namespace std;
-// Declare the lexer function
-extern "C" int yylex();
 
 
 class Editor {
@@ -431,12 +429,8 @@ private:
         loadFile(newFileName);   // Load the new file into the editor
     }
 };
-int yylex()
-{
-    return 0;
-}
+
 int main() {
-    yylex();              // Run the lexer
     Editor editor;
     editor.run();
     return 0;
