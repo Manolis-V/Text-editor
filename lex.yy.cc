@@ -19,7 +19,7 @@
      * We will address this in a future release of flex, or omit the C++ scanner
      * altogether.
      */
-    #define yyFlexLexer yyFlexLexer
+    // #define yyFlexLexer yyFlexLexer
 
 /* First, we deal with  platform-specific or compiler-specific issues. */
 
@@ -313,8 +313,8 @@ int yyFlexLexer::yywrap() { return 1; }
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-#define YY_NUM_RULES 5
-#define YY_END_OF_BUFFER 6
+#define YY_NUM_RULES 9
+#define YY_END_OF_BUFFER 10
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -322,10 +322,12 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static const flex_int16_t yy_accept[18] =
+static const flex_int16_t yy_accept[40] =
     {   0,
-        0,    0,    6,    3,    4,    3,    3,    3,    0,    2,
-        0,    0,    0,    0,    1,    0,    0
+        0,    0,   10,    7,    8,    7,    7,    7,    5,    6,
+        6,    6,    6,    6,    0,    2,    0,    5,    0,    3,
+        0,    6,    6,    6,    1,    6,    6,    0,    0,    3,
+        5,    6,    6,    6,    4,    6,    6,    6,    0
     } ;
 
 static const YY_CHAR yy_ec[256] =
@@ -334,16 +336,16 @@ static const YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    3,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    4,    1,    1,    1,    1,    5,    1,    1,    1,
+        1,    4,    5,    1,    5,    6,    7,    8,    8,    8,
+        8,    8,    8,    8,    8,    8,    8,    1,    1,    1,
+        1,    1,    1,    1,    9,    9,    9,    9,    9,    9,
+        9,    9,    9,    9,    9,    9,    9,    9,    9,    9,
+        9,    9,    9,    9,    9,    9,    9,    9,    9,    9,
+        1,   10,    1,    1,    9,    1,   11,    9,    9,    9,
 
-        1,    6,    1,    1,    7,    1,    1,    8,    1,    9,
-       10,    1,    1,    1,    1,   11,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+       12,   13,    9,    9,   14,    9,    9,   15,    9,   16,
+       17,    9,    9,   18,   19,   20,   21,    9,    9,    9,
+        9,    9,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -360,38 +362,55 @@ static const YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static const YY_CHAR yy_meta[12] =
+static const YY_CHAR yy_meta[22] =
+    {   0,
+        1,    2,    1,    1,    1,    1,    1,    3,    3,    1,
+        3,    3,    3,    3,    3,    3,    3,    3,    3,    3,
+        3
+    } ;
+
+static const flex_int16_t yy_base[44] =
+    {   0,
+        0,    0,   64,   65,   65,   19,   55,   19,   19,    0,
+       47,   46,   15,   48,   27,   65,   57,   26,   54,    0,
+       49,    0,   37,   38,    0,   34,   33,   48,   29,    0,
+       43,   38,   38,   27,   65,   27,   27,   19,   65,   37,
+       21,   40,   43
+    } ;
+
+static const flex_int16_t yy_def[44] =
+    {   0,
+       39,    1,   39,   39,   39,   40,   39,   39,   39,   41,
+       41,   41,   41,   41,   40,   39,   40,   39,   42,   43,
+       39,   41,   41,   41,   41,   41,   41,   42,   42,   43,
+       39,   41,   41,   41,   39,   41,   41,   41,    0,   39,
+       39,   39,   39
+    } ;
+
+static const flex_int16_t yy_nxt[87] =
+    {   0,
+        4,    5,    6,    4,    7,    4,    8,    9,   10,    4,
+       10,   11,   12,   13,   10,   10,   10,   14,   10,   10,
+       10,   16,   19,   22,   21,   20,   18,   25,   17,   16,
+       26,   21,   29,   18,   25,   35,   17,   15,   15,   15,
+       28,   28,   28,   30,   38,   30,   25,   37,   36,   25,
+       31,   29,   34,   25,   33,   32,   31,   29,   39,   27,
+       24,   23,   18,   39,    3,   39,   39,   39,   39,   39,
+       39,   39,   39,   39,   39,   39,   39,   39,   39,   39,
+       39,   39,   39,   39,   39,   39
+    } ;
+
+static const flex_int16_t yy_chk[87] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1
-    } ;
-
-static const flex_int16_t yy_base[20] =
-    {   0,
-        0,    6,   24,   25,   25,   11,   15,   13,   13,   25,
-       19,   10,    8,   13,   25,    0,   25,    3,    0
-    } ;
-
-static const flex_int16_t yy_def[20] =
-    {   0,
-       18,   18,   17,   17,   17,   19,   17,   17,   19,   17,
-       19,   17,   17,   17,   17,   17,    0,   17,   17
-    } ;
-
-static const flex_int16_t yy_nxt[37] =
-    {   0,
-        9,    5,    6,    4,   17,    7,    8,    5,    6,   17,
-       15,    7,    8,   10,   11,   10,   11,   16,   15,   14,
-       17,   13,   12,   17,    3,   17,   17,   17,   17,   17,
-       17,   17,   17,   17,   17,   17
-    } ;
-
-static const flex_int16_t yy_chk[37] =
-    {   0,
-       19,    1,    1,   18,    0,    1,    1,    2,    2,    0,
-       16,    2,    2,    6,    6,    9,    9,   14,   13,   12,
-       11,    8,    7,    3,   17,   17,   17,   17,   17,   17,
-       17,   17,   17,   17,   17,   17
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        1,    6,    8,   41,    9,    8,    9,   13,    6,   15,
+       13,   18,   29,   18,   38,   29,   15,   40,   40,   40,
+       42,   42,   42,   43,   37,   43,   36,   34,   33,   32,
+       31,   28,   27,   26,   24,   23,   21,   19,   17,   14,
+       12,   11,    7,    3,   39,   39,   39,   39,   39,   39,
+       39,   39,   39,   39,   39,   39,   39,   39,   39,   39,
+       39,   39,   39,   39,   39,   39
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -403,24 +422,18 @@ static const flex_int16_t yy_chk[37] =
 #define YY_RESTORE_YY_MORE_OFFSET
 #line 1 "syntax_highlighter.l"
 #line 2 "syntax_highlighter.l"
+#include <ncurses.h>
+#include <FlexLexer.h>
 #include <iostream>
-#include <FlexLexer.h> // Needed for the FlexLexer base class
+#include <sstream>
 
-// Custom lexer class that extends yyFlexLexer
-class MyLexer : public yyFlexLexer {
-public:
-    // Constructor
-    MyLexer(std::istream* arg = nullptr) : yyFlexLexer(arg) {}
+extern int yylex();
+void runLexer(const std::string& input);
+void apply_color(int color);
 
-    // Override yylex method
-    virtual int yylex();
-
-    // Apply color based on token type
-    void apply_color(int color);
-};
-
-#line 423 "lex.yy.cc"
-#line 424 "lex.yy.cc"
+ int row = 0, col = 0;
+#line 436 "lex.yy.cc"
+#line 437 "lex.yy.cc"
 
 #define INITIAL 0
 
@@ -552,10 +565,10 @@ YY_DECL
 		}
 
 	{
-#line 23 "syntax_highlighter.l"
+#line 17 "syntax_highlighter.l"
 
 
-#line 559 "lex.yy.cc"
+#line 572 "lex.yy.cc"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -582,13 +595,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 18 )
+				if ( yy_current_state >= 40 )
 					yy_c = yy_meta[yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 25 );
+		while ( yy_base[yy_current_state] != 65 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -614,44 +627,89 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 25 "syntax_highlighter.l"
+#line 19 "syntax_highlighter.l"
 {
     apply_color(1);
-    std::cout << yytext;
+    mvprintw(row++, 0, "%s", yytext);
+    refresh();
     apply_color(0);
 }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 31 "syntax_highlighter.l"
-{ 
+#line 26 "syntax_highlighter.l"
+{
     apply_color(2);
-    std::cout << yytext;
+    mvprintw(row++, 0, "%s", yytext);
+    refresh();
     apply_color(0);
 }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 37 "syntax_highlighter.l"
-{ 
-    std::cout << yytext;
+#line 33 "syntax_highlighter.l"
+{
+    apply_color(3);
+    mvprintw(row++, 0, "%s", yytext);
+    refresh();
+    apply_color(0);
 }
 	YY_BREAK
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 41 "syntax_highlighter.l"
-{ 
-    std::cout << "\n";
+#line 40 "syntax_highlighter.l"
+{
+    apply_color(3);
+    mvprintw(row++, 0, "%s", yytext);
+    refresh();
+    apply_color(0);
 }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 45 "syntax_highlighter.l"
+#line 47 "syntax_highlighter.l"
+{
+    apply_color(4);
+    mvprintw(row++, 0, "%s", yytext);
+    refresh();
+    apply_color(0);
+}
+	YY_BREAK
+case 6:
+YY_RULE_SETUP
+#line 54 "syntax_highlighter.l"
+{
+    apply_color(5);
+    mvprintw(row++, 0, "%s", yytext);
+    refresh();
+    apply_color(0);
+}
+	YY_BREAK
+case 7:
+YY_RULE_SETUP
+#line 61 "syntax_highlighter.l"
+{ 
+    mvprintw(row++, 0, "%s", yytext);
+    refresh();
+}
+	YY_BREAK
+case 8:
+/* rule 8 can match eol */
+YY_RULE_SETUP
+#line 66 "syntax_highlighter.l"
+{ 
+    mvprintw(row++, col++, "%s", yytext);
+    refresh();
+}
+	YY_BREAK
+case 9:
+YY_RULE_SETUP
+#line 71 "syntax_highlighter.l"
 ECHO;
 	YY_BREAK
-#line 655 "lex.yy.cc"
+#line 713 "lex.yy.cc"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1068,7 +1126,7 @@ int yyFlexLexer::yy_get_next_buffer()
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 18 )
+			if ( yy_current_state >= 40 )
 				yy_c = yy_meta[yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
@@ -1096,11 +1154,11 @@ int yyFlexLexer::yy_get_next_buffer()
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 18 )
+		if ( yy_current_state >= 40 )
 			yy_c = yy_meta[yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
-	yy_is_jam = (yy_current_state == 17);
+	yy_is_jam = (yy_current_state == 39);
 
 		return yy_is_jam ? 0 : yy_current_state;
 }
@@ -1614,21 +1672,57 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 45 "syntax_highlighter.l"
+#line 71 "syntax_highlighter.l"
 
 
-// Implementation of the apply_color method
-void MyLexer::apply_color(int color) {
+void apply_color(int color) {
     switch (color) {
         case 1:
-            std::cout << "\033[1;31m"; // Red for keywords
+            attron(COLOR_PAIR(1));
             break;
         case 2:
-            std::cout << "\033[1;32m"; // Green for strings
+            attron(COLOR_PAIR(2));
+            break;
+        case 3:
+            attron(COLOR_PAIR(3));
+            break;
+        case 4:
+            attron(COLOR_PAIR(4));
+            break;
+        case 5:
+            attron(COLOR_PAIR(5));
             break;
         default:
-            std::cout << "\033[0m";    // Reset color
+            attroff(COLOR_PAIR(1));
+            attroff(COLOR_PAIR(2));
+            attroff(COLOR_PAIR(3));
+            attroff(COLOR_PAIR(4));
+            attroff(COLOR_PAIR(5));
             break;
     }
 }
+
+void runLexer(const std::string& input) {
+    std::istringstream iss(input);
+    yyFlexLexer lexer(&iss);
+
+    initscr();
+    start_color();
+    init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);
+    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(4, COLOR_BLUE, COLOR_BLACK);
+    init_pair(5, COLOR_MAGENTA, COLOR_BLACK);
+
+    int row = 0, col = 0;  // Initialize row and col for dynamic positioning
+
+    lexer.yylex();
+
+    // After each mvprintw call, refresh the screen to display the output
+    refresh();
+
+    getch();  // Wait for user input before closing the window
+    endwin();
+}
+
 

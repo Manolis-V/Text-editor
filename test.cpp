@@ -1,9 +1,16 @@
-// main.cpp
-#include "syntax_highlighter.h" // Include the header file for the lexer
-#include <iostream>
-using namespace std;
+#include <string>
+extern void runLexer(const std::string& input);
+
 int main() {
-    // cout << "heloo2";
-    apply_color('a'); // Call the lexer function
+    std::string input = R"(int main() {
+    float num = 3.14;
+    // This is a comment
+    if (num > 2) {
+        return 1;
+    } else {
+        return 0;
+    }
+})";
+    runLexer(input);
     return 0;
 }
