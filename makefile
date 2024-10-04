@@ -52,7 +52,7 @@ LEX = flex
 TARGET = texteditor
 
 # Source files (add the .l file as a source)
-SRCS = texteditor.cpp syntax_highlighter.cpp
+SRCS = test.cpp syntax_highlighter.cpp
 
 # Object files (generated from source files)
 OBJS = $(SRCS:.cpp=.o)

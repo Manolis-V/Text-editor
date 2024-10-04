@@ -141,7 +141,9 @@ private:
                 for (int j = 0; j < screenWidth; j++) {
                     addch(' ');
                 }
+                
                 mvprintw(i, 6, "%s", text[i + topLine].c_str()); // Print each line
+                //apply_color(); // Call the lexer function
                 attroff(COLOR_PAIR(16)); // Turn off line number color
                            
             } else {

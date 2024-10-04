@@ -60,7 +60,7 @@ void apply_color();
 %%
 
 /* Custom Method Implementation */
-void apply_color() {
+void apply_color(char i) {
     yyFlexLexer lexer;  
     lexer.yylex();  
 }
