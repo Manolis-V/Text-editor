@@ -124,4 +124,3 @@ void runLexer(const std::string& input) {
     getch();
     endwin();
 }
-

@@ -38,63 +38,6 @@
 # # Phony targets (these do not correspond to actual files)
 # .PHONY: all clean
 
-###############################################################
-# # Makefile for the C++ text editor project
-# DOESNT WORK 
-# # Compiler and compiler flags
-# CXX = g++
-# CXXFLAGS = -Wall -std=c++17
-
-# # Flex lexer generator
-# LEX = flex
-
-# # Name of the output executable
-# TARGET = texteditor
-
-# # Source files (add the .l file as a source)
-# SRCS = test.cpp syntax_highlighter.cpp
-
-# # Object files (generated from source files)
-# OBJS = $(SRCS:.cpp=.o)
-
-# # Libraries
-# LIBS = -lncurses
-
-# # Flex source (the .l file)
-# LEXER_SRC = syntax_highlighter.l
-
-# # Generated C++ file from Flex
-# LEXER_CPP = syntax_highlighter.cpp
-
-# # Default target to build the editor
-# all: $(TARGET)
-
-# # Rule to link the object files and create the executable
-# $(TARGET): $(OBJS)
-# 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
-
-# # Rule to compile .cpp files into .o files
-# %.o: %.cpp
-# 	$(CXX) $(CXXFLAGS) -c $<
-
-# # Rule to generate the C++ lexer file from the .l Flex file
-# $(LEXER_CPP): $(LEXER_SRC)
-# 	$(LEX) --c++ -o $(LEXER_CPP) $(LEXER_SRC)
-
-# # Include the lexer source in the build process
-# $(OBJS): $(LEXER_CPP)
-
-# # Rule to run the program
-# run: $(TARGET)
-# 	./$(TARGET)
-
-# # Clean up the build
-# clean:
-# 	rm -f $(OBJS) $(TARGET) $(LEXER_CPP)
-
-# # Phony targets (these do not correspond to actual files)
-# .PHONY: all clean run
-#################################################################################
 
 # Compiler and flags
 CXX = g++

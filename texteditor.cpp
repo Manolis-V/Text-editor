@@ -6,7 +6,6 @@
 #include <chrono>
 #include <thread>
 #include <dirent.h> // For directory operations on UNIX systems
-#include "syntax_highlighter.h" // Include the header file for the lexer
 
 using namespace std;
 
