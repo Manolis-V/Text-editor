@@ -19,7 +19,7 @@
      * We will address this in a future release of flex, or omit the C++ scanner
      * altogether.
      */
-    // #define yyFlexLexer yyFlexLexer
+    #define yyFlexLexer yyFlexLexer
 
 /* First, we deal with  platform-specific or compiler-specific issues. */
 
@@ -423,7 +423,7 @@ static const flex_int16_t yy_chk[87] =
 #line 1 "syntax_highlighter.l"
 #line 2 "syntax_highlighter.l"
 #include <ncurses.h>
-#include <FlexLexer.h>
+//#include <FlexLexer.h>
 #include <iostream>
 #include <sstream>
 
@@ -431,7 +431,7 @@ extern int yylex();
 void runLexer(const std::string& input);
 void apply_color(int color);
 
- int row = 0, col = 0;
+int row = 0, col = 0;
 #line 436 "lex.yy.cc"
 #line 437 "lex.yy.cc"
 
@@ -630,7 +630,8 @@ YY_RULE_SETUP
 #line 19 "syntax_highlighter.l"
 {
     apply_color(1);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
@@ -638,20 +639,22 @@ YY_RULE_SETUP
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 26 "syntax_highlighter.l"
+#line 27 "syntax_highlighter.l"
 {
     apply_color(2);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 33 "syntax_highlighter.l"
+#line 35 "syntax_highlighter.l"
 {
     apply_color(3);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
@@ -659,57 +662,62 @@ YY_RULE_SETUP
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 40 "syntax_highlighter.l"
+#line 43 "syntax_highlighter.l"
 {
     apply_color(3);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 47 "syntax_highlighter.l"
+#line 51 "syntax_highlighter.l"
 {
     apply_color(4);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 54 "syntax_highlighter.l"
+#line 59 "syntax_highlighter.l"
 {
     apply_color(5);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 61 "syntax_highlighter.l"
+#line 67 "syntax_highlighter.l"
 { 
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
 }
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 66 "syntax_highlighter.l"
-{ 
-    mvprintw(row++, col++, "%s", yytext);
+#line 73 "syntax_highlighter.l"
+{
+    mvprintw(row++, col, "%s", yytext);
+    col = 0;
     refresh();
 }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 71 "syntax_highlighter.l"
+#line 79 "syntax_highlighter.l"
 ECHO;
 	YY_BREAK
-#line 713 "lex.yy.cc"
+#line 721 "lex.yy.cc"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1672,7 +1680,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 71 "syntax_highlighter.l"
+#line 79 "syntax_highlighter.l"
 
 
 void apply_color(int color) {
@@ -1714,14 +1722,11 @@ void runLexer(const std::string& input) {
     init_pair(4, COLOR_BLUE, COLOR_BLACK);
     init_pair(5, COLOR_MAGENTA, COLOR_BLACK);
 
-    int row = 0, col = 0;  // Initialize row and col for dynamic positioning
-
     lexer.yylex();
 
-    // After each mvprintw call, refresh the screen to display the output
-    refresh();
+    
 
-    getch();  // Wait for user input before closing the window
+    getch();
     endwin();
 }
 

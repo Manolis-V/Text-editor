@@ -112,7 +112,7 @@ TARGET = syntax_highlighter
 LIBS = -lncurses
 
 # Object files
-OBJ = syntax_highlighter.o main.o
+OBJ = syntax_highlighter.o test.o
 
 # Build the final executable
 $(TARGET): $(OBJ)
@@ -123,9 +123,13 @@ syntax_highlighter.o: $(FLEX_SRC)
 	$(FLEX) -o $(FLEX_OUTPUT) $(FLEX_SRC)
 	$(CXX) $(CXXFLAGS) -c $(FLEX_OUTPUT)
 
-# Compile the main program
-main.o: test.cpp
-	$(CXX) $(CXXFLAGS) -c main.cpp
+# Compile the test program
+test.o: test.cpp
+	$(CXX) $(CXXFLAGS) -c test.cpp
+
+# Rule to run the program
+run: $(TARGET)
+	./$(TARGET)
 
 # Clean the build
 clean:

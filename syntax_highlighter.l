@@ -1,6 +1,6 @@
 %{
 #include <ncurses.h>
-#include <FlexLexer.h>
+//#include <FlexLexer.h>
 #include <iostream>
 #include <sstream>
 
@@ -8,7 +8,7 @@ extern int yylex();
 void runLexer(const std::string& input);
 void apply_color(int color);
 
- int row = 0, col = 0;
+int row = 0, col = 0;
 %}
 
 %option noyywrap
@@ -18,53 +18,61 @@ void apply_color(int color);
 
 "int"|"float"|"if"|"else"|"return" {
     apply_color(1);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
 
 \"([^"\\]|\\.)*\" {
     apply_color(2);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
 
 "//".* {
     apply_color(3);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
 
 "/*"([^*]|\*+[^*/])*\*+"/" {
     apply_color(3);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
 
 [-+]?[0-9]+(\.[0-9]+)? {
     apply_color(4);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     apply_color(5);
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
     apply_color(0);
 }
 
 . { 
-    mvprintw(row++, 0, "%s", yytext);
+    mvprintw(row, col, "%s", yytext);
+    col = col + strlen(yytext);
     refresh();
 }
 
-\n { 
-    mvprintw(row++, col++, "%s", yytext);
+\n {
+    mvprintw(row++, col, "%s", yytext);
+    col = 0;
     refresh();
 }
 
@@ -109,14 +117,11 @@ void runLexer(const std::string& input) {
     init_pair(4, COLOR_BLUE, COLOR_BLACK);
     init_pair(5, COLOR_MAGENTA, COLOR_BLACK);
 
-    int row = 0, col = 0;  // Initialize row and col for dynamic positioning
-
     lexer.yylex();
 
-    // After each mvprintw call, refresh the screen to display the output
-    refresh();
+    
 
-    getch();  // Wait for user input before closing the window
+    getch();
     endwin();
 }
 
