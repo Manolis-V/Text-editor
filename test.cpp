@@ -1,40 +1,169 @@
-#include <string>
 #include <ncurses.h>
-#include <iostream>
+#include <filesystem>
+#include <vector>
+#include <string>
+#include <fstream>
+//g++ -std=c++17 -lncurses -o test test.cpp
 
-extern void runLexer(const std::string& input, int startRow); // Updated function declaration
+using namespace std;
 
-int main() {
-    initscr();             // Start ncurses mode
-    start_color();         // Start color functionality in ncurses
-    init_pair(1, COLOR_RED, COLOR_BLACK);      // For keywords like "int", "float"
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);    // For strings
-    init_pair(3, COLOR_YELLOW, COLOR_BLACK);   // For comments
-    init_pair(4, COLOR_BLUE, COLOR_BLACK);     // For numbers
-    init_pair(5, COLOR_MAGENTA, COLOR_BLACK);  // For other identifiers
-
-    int ch;
-    std::string input;
-    int startRow = 0;  // Specify the starting row (you can modify it as needed)
-
-    while ((ch = getch()) != '\n') {  // Real-time input handling
-        if (ch == KEY_BACKSPACE || ch == 127) {  // Handle backspace
-            if (!input.empty()) {
-                input.pop_back();
-            }
-        } else {
-            input += ch;  // Append character to input
+// Function to draw the tabs on the left side
+void drawTabs(const vector<string>& tabs, int selectedTab) {
+    for (size_t i = 0; i < tabs.size(); ++i) {
+        if (i == selectedTab) {
+            attron(A_REVERSE); // Highlight the selected tab
         }
+        mvprintw(i + 1, 1, "%s", tabs[i].c_str()); // Draw each tab
+        if (i == selectedTab) {
+            attroff(A_REVERSE); // Turn off highlighting
+        }
+    }
+}
 
-        clear();  // Clear the screen before redrawing
+// Function to display a message on the right side
+void displayMessage(const string& message, bool tabsVisible) {
+    
+    if (tabsVisible) {
+        mvprintw(1, 25, "%s", message.c_str()); // Display message starting at column 25
+    } else {
+        mvprintw(1, 1, "%s", message.c_str()); // Display message starting at column 1 when tabs are hidden
+    }
+}
 
-        // Pass the current input and starting row to the lexer for colorization
-        runLexer(input, startRow);
+// Function to draw a vertical separator
+void drawSeparator(bool sep) {
+    if (sep) {
+        for (int i = 0; i < LINES; ++i) {
+            mvaddch(i, 24, '|'); // Draw a vertical line at column 24
+        }
+    } else {
+        for (int i = 0; i < LINES; ++i) {
+            mvaddch(i, 24, ' '); // Clear the separator
+        }
+    }
+}
 
-        refresh();  // Refresh the screen to reflect the updates
+// Function to display file contents in the right panel
+void displayFileContent(const string& filename) {
+    clear(); // Clear the screen
+
+    ifstream file(filename);
+    if (!file.is_open()) {
+        mvprintw(0, 0, "Error opening file: %s", filename.c_str());
+        refresh();
+        getch(); // Wait for user input
+        return; // Exit function
     }
 
-    getch();
-    endwin();  // End ncurses mode
-    return 0;
+    string line;
+    int row = 0;
+    while (getline(file, line)) {
+        mvprintw(row, 0, "%s", line.c_str()); // Display each line of the file
+        row++;
+        if (row >= LINES - 1) { // Prevent overflow
+            break; // Stop if we reach the bottom of the window
+        }
+    }
+
+    file.close();
+    refresh(); // Refresh to show file contents
+}
+
+int main() {
+    initscr();                 // Initialize ncurses
+    noecho();                  // Do not echo input characters
+    keypad(stdscr, TRUE);      // Enable special keys (like arrow keys)
+    curs_set(0);               // Hide the cursor for a cleaner look
+
+    vector<string> tabs;       // Vector to hold tab names
+    const string directory = "."; // Current directory
+
+    // Get all regular files in the directory
+    for (const auto& entry : filesystem::directory_iterator(directory)) {
+        if (entry.is_regular_file()) {
+            tabs.push_back(entry.path().filename().string());
+        }
+    }
+
+    if (tabs.empty()) {
+        mvprintw(1, 1, "No files found in the directory."); // Message if no files
+        refresh();
+        getch(); // Wait for a key press
+        endwin(); // End ncurses mode
+        return 0;
+    }
+
+    int selectedTab = 0; // Index of the selected tab
+    string message = "Press LEFT/RIGHT to navigate tabs, 'Ctrl + H' to toggle tabs, 'Enter' to open file"; // Instructions message
+    bool tabsVisible = true; // To track the visibility of the tabs
+
+    // Draw the initial screen
+    drawTabs(tabs, selectedTab);
+    drawSeparator(true);
+    displayMessage(message, tabsVisible);
+    refresh(); // Initial refresh
+
+    // Main loop for user input
+    int ch;
+    while (true) {
+        ch = getch(); // Wait for user input
+        if (ch == 'q') break; // Exit on 'q'
+
+        // Check for Ctrl + H
+        if (ch == 8) { // 8 is the ASCII code for Ctrl + H
+            tabsVisible = !tabsVisible; // Toggle visibility
+            clear();
+            if (tabsVisible) {
+                drawTabs(tabs, selectedTab); // Draw tabs if visible
+                drawSeparator(true); // Draw separator if tabs are visible
+            } else {
+                drawSeparator(false); // Clear the separator if tabs are hidden
+            }
+            displayMessage(message, tabsVisible); // Redisplay message
+            refresh(); // Refresh to show changes
+            continue; // Skip the rest of the loop
+        }
+        clear();
+        // Handle input and update selected tab
+        int oldSelectedTab = selectedTab; // Store old selection for comparison
+        switch (ch) {
+            case KEY_UP:
+                if (selectedTab > 0) {
+                    selectedTab--;
+                }
+                break;
+            case KEY_DOWN:
+                if (selectedTab < tabs.size() - 1) {
+                    selectedTab++;
+                }
+                break;
+            case 10: // Enter key
+                // clear();
+                if (tabsVisible) { // Only open file if tabs are visible
+                    displayFileContent(tabs[selectedTab]); // Display the selected file
+                    getch(); // Wait for user input before returning
+                    drawTabs(tabs, selectedTab); // Redraw the tabs
+                    drawSeparator(true); // Redraw the separator
+                    displayMessage(message, tabsVisible); // Redisplay message
+                }
+                break;
+            case 27: // Escape key
+                // clear();
+                drawTabs(tabs, selectedTab); // Redraw the tabs
+                drawSeparator(true); // Redraw the separator
+                displayMessage(message, tabsVisible); // Redisplay message
+                break;
+        }
+        
+        // Only redraw parts that changed if tabs are visible
+        if (tabsVisible && oldSelectedTab != selectedTab) {
+            drawTabs(tabs, selectedTab); // Update only tabs
+            drawSeparator(true); // Redraw the separator
+            displayMessage(message, tabsVisible); // Redisplay message
+            refresh(); // Refresh to show changes
+        }
+    }
+
+    endwin(); // End ncurses mode
+    return 0; // Return success
 }
