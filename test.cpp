@@ -1,17 +1,39 @@
 #include <string>
-using namespace std;
-extern void runLexer(const string& input);
+#include <ncurses.h>
+#include <iostream>
+
+extern void runLexer(const std::string& input); // Updated function declaration
 
 int main() {
-    string input = R"(int main() {
-    float num = 3.14;
-    // This is a comment
-    if (num > 2) {
-        return 1;
-    } else {
-        return 0;
+    initscr();             // Start ncurses mode
+    start_color();         // Start color functionality in ncurses
+    init_pair(1, COLOR_RED, COLOR_BLACK);      // For keywords like "int", "float"
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);    // For strings
+    init_pair(3, COLOR_YELLOW, COLOR_BLACK);   // For comments
+    init_pair(4, COLOR_BLUE, COLOR_BLACK);     // For numbers
+    init_pair(5, COLOR_MAGENTA, COLOR_BLACK);  // For other identifiers
+
+    int ch;
+    std::string input;
+
+    while ((ch = getch()) != '\n') {  // Real-time input handling
+        if (ch == KEY_BACKSPACE || ch == 127) {  // Handle backspace
+            if (!input.empty()) {
+                input.pop_back();
+            }
+        } else {
+            input += ch;  // Append character to input
+        }
+
+        clear();  // Clear the screen before redrawing
+
+        // Pass the current input and starting row to the lexer for colorization
+        runLexer(input);
+
+        refresh();  // Refresh the screen to reflect the updates
     }
-})";
-    runLexer(input);
+
+    getch();
+    endwin();  // End ncurses mode
     return 0;
 }

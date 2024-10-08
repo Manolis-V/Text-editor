@@ -1,79 +1,64 @@
 %{
 #include <ncurses.h>
-//#include <FlexLexer.h>
-#include <iostream>
-#include <sstream>
+#include <sstream>  // Include the required header for std::istringstream
+#include <cstring>  // For strlen
+#include <string>   // For std::string
 
 extern int yylex();
-void runLexer(const std::string& input);
-void apply_color(int color);
-
-int row = 0, col = 0;
+void apply_color(int color);  // Function to apply colors
+void print_token(const char* text);
+int row = 0, col = 0;  // Track cursor position
 %}
 
 %option noyywrap
 %option c++
+%option input
 
 %%
 
 "int"|"float"|"if"|"else"|"return" {
-    apply_color(1);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
-    apply_color(0);
+    apply_color(1);  // Apply keyword color (e.g., red)
+    print_token(yytext);
+    apply_color(0);  // Reset color
 }
 
 \"([^"\\]|\\.)*\" {
-    apply_color(2);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    apply_color(2);  // Apply string color (e.g., green)
+    print_token(yytext);
     apply_color(0);
 }
 
 "//".* {
-    apply_color(3);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    apply_color(3);  // Apply comment color (e.g., yellow)
+    print_token(yytext);
     apply_color(0);
 }
 
 "/*"([^*]|\*+[^*/])*\*+"/" {
-    apply_color(3);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    apply_color(3);  // Apply comment color (e.g., yellow)
+    print_token(yytext);
     apply_color(0);
 }
 
 [-+]?[0-9]+(\.[0-9]+)? {
-    apply_color(4);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    apply_color(4);  // Apply number color (e.g., blue)
+    print_token(yytext);
     apply_color(0);
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    apply_color(5);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    apply_color(5);  // Apply identifier color (e.g., magenta)
+    print_token(yytext);
     apply_color(0);
 }
 
 . { 
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    print_token(yytext);  // For any single character, print it without color
 }
 
 \n {
-    mvprintw(row++, col, "%s", yytext);
+    row++;
     col = 0;
-    refresh();
 }
 
 %%
@@ -105,22 +90,16 @@ void apply_color(int color) {
     }
 }
 
+// Helper function to print tokens and update cursor position
+void print_token(const char* text) {
+    mvprintw(row, col, "%s", text);  // Print at current row and column
+    col += strlen(text);             // Move the cursor forward
+}
+
 void runLexer(const std::string& input) {
-    std::istringstream iss(input);
-    yyFlexLexer lexer(&iss);
-
-    initscr();
-    start_color();
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);
-    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(4, COLOR_BLUE, COLOR_BLACK);
-    init_pair(5, COLOR_MAGENTA, COLOR_BLACK);
-
-    lexer.yylex();
-
-    
-
-    getch();
-    endwin();
+    std::istringstream iss(input);   // Ensure the <sstream> header is included
+    yyFlexLexer lexer(&iss);         // Use the input stream with the lexer
+    row = 0;
+    col = 0;  // Reset cursor position
+    lexer.yylex();  // Tokenize and colorize input
 }
