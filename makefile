@@ -1,4 +1,3 @@
-
 # Compiler and flags
 CXX = g++
 CXXFLAGS = -Wall -std=c++17

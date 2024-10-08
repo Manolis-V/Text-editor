@@ -3,10 +3,11 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <dirent.h>
 //g++ -std=c++17 -lncurses -o test test.cpp
 
 using namespace std;
-
+bool tabsVisible = true; // To track the visibility of the tabs
 // Function to draw the tabs on the left side
 void drawTabs(const vector<string>& tabs, int selectedTab) {
     for (size_t i = 0; i < tabs.size(); ++i) {
@@ -21,7 +22,7 @@ void drawTabs(const vector<string>& tabs, int selectedTab) {
 }
 
 // Function to display a message on the right side
-void displayMessage(const string& message, bool tabsVisible) {
+void displayMessage(const string& message) {
     
     if (tabsVisible) {
         mvprintw(1, 25, "%s", message.c_str()); // Display message starting at column 25
@@ -49,7 +50,7 @@ void displayFileContent(const string& filename) {
 
     ifstream file(filename);
     if (!file.is_open()) {
-        mvprintw(0, 0, "Error opening file: %s", filename.c_str());
+        mvprintw(0, 25, "Error opening file: %s", filename.c_str());
         refresh();
         getch(); // Wait for user input
         return; // Exit function
@@ -58,7 +59,7 @@ void displayFileContent(const string& filename) {
     string line;
     int row = 0;
     while (getline(file, line)) {
-        mvprintw(row, 0, "%s", line.c_str()); // Display each line of the file
+        mvprintw(row, 25, "%s", line.c_str()); // Display each line of the file
         row++;
         if (row >= LINES - 1) { // Prevent overflow
             break; // Stop if we reach the bottom of the window
@@ -78,11 +79,18 @@ int main() {
     vector<string> tabs;       // Vector to hold tab names
     const string directory = "."; // Current directory
 
-    // Get all regular files in the directory
-    for (const auto& entry : filesystem::directory_iterator(directory)) {
-        if (entry.is_regular_file()) {
-            tabs.push_back(entry.path().filename().string());
+    
+    // Read all files in the current directory using dirent.h
+    DIR* dir;
+    struct dirent* entry;
+
+    if ((dir = opendir(".")) != nullptr) {
+        while ((entry = readdir(dir)) != nullptr) {
+            if (entry->d_type == DT_REG) {  // Only regular files
+                tabs.push_back(entry->d_name);
+            }
         }
+        closedir(dir);
     }
 
     if (tabs.empty()) {
@@ -95,12 +103,11 @@ int main() {
 
     int selectedTab = 0; // Index of the selected tab
     string message = "Press LEFT/RIGHT to navigate tabs, 'Ctrl + H' to toggle tabs, 'Enter' to open file"; // Instructions message
-    bool tabsVisible = true; // To track the visibility of the tabs
+    
 
     // Draw the initial screen
     drawTabs(tabs, selectedTab);
     drawSeparator(true);
-    displayMessage(message, tabsVisible);
     refresh(); // Initial refresh
 
     // Main loop for user input
@@ -111,6 +118,7 @@ int main() {
 
         // Check for Ctrl + H
         if (ch == 8) { // 8 is the ASCII code for Ctrl + H
+
             tabsVisible = !tabsVisible; // Toggle visibility
             clear();
             if (tabsVisible) {
@@ -119,39 +127,41 @@ int main() {
             } else {
                 drawSeparator(false); // Clear the separator if tabs are hidden
             }
-            displayMessage(message, tabsVisible); // Redisplay message
+            //displayMessage(message, tabsVisible); // Redisplay message
             refresh(); // Refresh to show changes
             continue; // Skip the rest of the loop
         }
-        clear();
         // Handle input and update selected tab
         int oldSelectedTab = selectedTab; // Store old selection for comparison
         switch (ch) {
             case KEY_UP:
                 if (selectedTab > 0) {
                     selectedTab--;
+                    displayFileContent(tabs[selectedTab]);
                 }
                 break;
             case KEY_DOWN:
                 if (selectedTab < tabs.size() - 1) {
                     selectedTab++;
+                    displayFileContent(tabs[selectedTab]);
                 }
                 break;
             case 10: // Enter key
-                // clear();
+                clear();
                 if (tabsVisible) { // Only open file if tabs are visible
                     displayFileContent(tabs[selectedTab]); // Display the selected file
                     getch(); // Wait for user input before returning
                     drawTabs(tabs, selectedTab); // Redraw the tabs
                     drawSeparator(true); // Redraw the separator
-                    displayMessage(message, tabsVisible); // Redisplay message
+                    //displayMessage(message, tabsVisible); // Redisplay message
                 }
                 break;
             case 27: // Escape key
-                // clear();
+                clear();
                 drawTabs(tabs, selectedTab); // Redraw the tabs
                 drawSeparator(true); // Redraw the separator
-                displayMessage(message, tabsVisible); // Redisplay message
+                //displayMessage(message, tabsVisible); // Redisplay message
+                refresh();
                 break;
         }
         
@@ -159,7 +169,7 @@ int main() {
         if (tabsVisible && oldSelectedTab != selectedTab) {
             drawTabs(tabs, selectedTab); // Update only tabs
             drawSeparator(true); // Redraw the separator
-            displayMessage(message, tabsVisible); // Redisplay message
+            //displayMessage(message, tabsVisible); // Redisplay message
             refresh(); // Refresh to show changes
         }
     }
