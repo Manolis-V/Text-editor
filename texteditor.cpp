@@ -8,6 +8,7 @@
 #include <dirent.h> // For directory operations on UNIX systems
 
 using namespace std;
+extern void runLexer(const string& input, int startRow); // Updated function declaration
 
 
 class Editor {
@@ -15,17 +16,18 @@ public:
     Editor() {
         initscr();  // Start ncurses mode
         start_color(); // Initialize color support
-        init_pair(1, COLOR_GREEN, COLOR_BLACK);   // Keywords
-        init_pair(2, COLOR_YELLOW, COLOR_BLACK);  // Strings
-        init_pair(3, COLOR_CYAN, COLOR_BLACK);    // Comments
-        init_pair(4, COLOR_RED, COLOR_BLACK);     // Numbers
-   
-   
-        init_pair(5, COLOR_WHITE, COLOR_BLACK);   // Identifiers/Functions
-        init_pair(13, COLOR_WHITE, 234);
-        init_pair(14, 106, 234);
 
-        init_pair(15, 107, 235);
+        init_pair(1, COLOR_RED, COLOR_BLACK);      // For keywords like "int", "float"
+        init_pair(2, COLOR_GREEN, COLOR_BLACK);    // For strings
+        init_pair(3, COLOR_YELLOW, COLOR_BLACK);   // For comments
+        init_pair(4, COLOR_BLUE, COLOR_BLACK);     // For numbers
+        init_pair(5, COLOR_MAGENTA, COLOR_BLACK);  // For other identifiers
+
+
+        init_pair(13, COLOR_WHITE, 234);
+        init_pair(14, 106, 234);    // for line numbers
+
+        init_pair(15, 107, 235);    // for line numbers
         init_pair(16, COLOR_WHITE, 235);
         bkgd(COLOR_PAIR(13));
 
@@ -141,27 +143,19 @@ private:
                     addch(' ');
                 }
                 
-                mvprintw(i, 6, "%s", text[i + topLine].c_str()); // Print each line
-                //apply_color(); // Call the lexer function
+                runLexer(text[i + topLine].c_str(), i);
                 attroff(COLOR_PAIR(16)); // Turn off line number color
-                           
-            } else {
-                //clrtoeol();
 
-                mvprintw(i, 6, "%s", text[i + topLine].c_str()); // Print each line
+            } else {
+
+                runLexer(text[i + topLine].c_str(), i);
                 attron(COLOR_PAIR(14)); // Turn on line number color
                 mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
                 attroff(COLOR_PAIR(14)); // Turn off line number color
             
-                
             }
         }
 
-        // Move cursor to the correct position, adjusting for scrolling
-        // int visibleCursorY = previousCursorY - topLine;
-        // move(visibleCursorY, cursorX + 6);
-        // clrtoeol();
-        // refresh();
         int visibleCursorY = cursorY - topLine;
         move(visibleCursorY, cursorX + 6);  // Adjust cursor position to account for line numbers
         refresh(); // Refresh the screen to update the display
@@ -177,14 +171,6 @@ private:
             move(0, 1);  // Adjust for line numbers
             insdelln(-1);  // Delete the top line (scrolling up the rest)
             
-            // Render the new bottom line
-            int newLineIndex = topLine + screenHeight - 1;  // Index of the new bottom line
-
-            mvprintw(screenHeight - 1, 4, "%s", text[newLineIndex].c_str()); // Print the new line
-            attron(COLOR_PAIR(4));  // Line number color
-            mvprintw(screenHeight - 1, 0, "%3d: ", newLineIndex); // Print line number
-            attroff(COLOR_PAIR(4));  // Turn off line number color
-            
             refresh();
         }
     }
@@ -197,12 +183,6 @@ private:
             move(0, 1);  // Move cursor to the top of the screen
             insdelln(1);  // Insert a blank line at the top (pushing lines down)
 
-            // Render the new top line
-            mvprintw(0, 4, "%s", text[topLine].c_str());  // Print the new top line
-            attron(COLOR_PAIR(4));  // Line number color
-            mvprintw(0, 0, "%3d: ", topLine + 1);  // Print the line number for the new top line
-            attroff(COLOR_PAIR(4));  // Turn off line number color
-    
             refresh();  // Refresh the screen to reflect changes
         }
     }

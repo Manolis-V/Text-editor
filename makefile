@@ -55,7 +55,7 @@ TARGET = syntax_highlighter
 LIBS = -lncurses
 
 # Object files
-OBJ = syntax_highlighter.o test.o
+OBJ = syntax_highlighter.o texteditor.o
 
 # Build the final executable
 $(TARGET): $(OBJ)
@@ -67,8 +67,8 @@ syntax_highlighter.o: $(FLEX_SRC)
 	$(CXX) $(CXXFLAGS) -c $(FLEX_OUTPUT)
 
 # Compile the test program
-test.o: test.cpp
-	$(CXX) $(CXXFLAGS) -c test.cpp
+texteditor.o: texteditor.cpp
+	$(CXX) $(CXXFLAGS) -c texteditor.cpp
 
 # Rule to run the program
 run: $(TARGET)

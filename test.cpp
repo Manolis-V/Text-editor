@@ -2,7 +2,7 @@
 #include <ncurses.h>
 #include <iostream>
 
-extern void runLexer(const std::string& input); // Updated function declaration
+extern void runLexer(const std::string& input, int startRow); // Updated function declaration
 
 int main() {
     initscr();             // Start ncurses mode
@@ -15,6 +15,7 @@ int main() {
 
     int ch;
     std::string input;
+    int startRow = 0;  // Specify the starting row (you can modify it as needed)
 
     while ((ch = getch()) != '\n') {  // Real-time input handling
         if (ch == KEY_BACKSPACE || ch == 127) {  // Handle backspace
@@ -28,7 +29,7 @@ int main() {
         clear();  // Clear the screen before redrawing
 
         // Pass the current input and starting row to the lexer for colorization
-        runLexer(input);
+        runLexer(input, startRow);
 
         refresh();  // Refresh the screen to reflect the updates
     }

@@ -7,6 +7,7 @@
 extern int yylex();
 void apply_color(int color);  // Function to apply colors
 void print_token(const char* text);
+
 int row = 0, col = 0;  // Track cursor position
 %}
 
@@ -96,10 +97,11 @@ void print_token(const char* text) {
     col += strlen(text);             // Move the cursor forward
 }
 
-void runLexer(const std::string& input) {
-    std::istringstream iss(input);   // Ensure the <sstream> header is included
-    yyFlexLexer lexer(&iss);         // Use the input stream with the lexer
-    row = 0;
-    col = 0;  // Reset cursor position
-    lexer.yylex();  // Tokenize and colorize input
+// Updated runLexer function to accept row argument
+void runLexer(const std::string& input, int startRow) {
+    std::istringstream iss(input);   // Use string as input stream for lexer
+    yyFlexLexer lexer(&iss);
+    row = startRow;  // Initialize row with the passed argument
+    col = 6;         // Reset column position
+    lexer.yylex();   // Tokenize and colorize input
 }
