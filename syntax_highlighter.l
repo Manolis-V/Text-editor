@@ -9,6 +9,7 @@ void apply_color(int color);  // Function to apply colors
 void print_token(const char* text);
 
 int row = 0, col = 0;  // Track cursor position
+bool selected_line = false;
 %}
 
 %option noyywrap
@@ -17,7 +18,7 @@ int row = 0, col = 0;  // Track cursor position
 
 %%
 
-"int"|"float"|"if"|"else"|"return" {
+"int"|"float"|"if"|"else"|"return"|"string" {
     apply_color(1);  // Apply keyword color (e.g., red)
     print_token(yytext);
     apply_color(0);  // Reset color
@@ -67,19 +68,37 @@ int row = 0, col = 0;  // Track cursor position
 void apply_color(int color) {
     switch (color) {
         case 1:
-            attron(COLOR_PAIR(1));
+            if(selected_line == true){
+                color = 100 + color;
+                for (int j = 0; j < 50; j++) {
+                    addch(' ');
+                }
+            }
+            attron(COLOR_PAIR(color));
             break;
         case 2:
-            attron(COLOR_PAIR(2));
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
             break;
         case 3:
-            attron(COLOR_PAIR(3));
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
             break;
         case 4:
-            attron(COLOR_PAIR(4));
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
             break;
         case 5:
-            attron(COLOR_PAIR(5));
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
             break;
         default:
             attroff(COLOR_PAIR(1));
@@ -87,20 +106,32 @@ void apply_color(int color) {
             attroff(COLOR_PAIR(3));
             attroff(COLOR_PAIR(4));
             attroff(COLOR_PAIR(5));
+            attroff(COLOR_PAIR(101));
+            attroff(COLOR_PAIR(102));
+            attroff(COLOR_PAIR(103));
+            attroff(COLOR_PAIR(104));
+            attroff(COLOR_PAIR(105));
+
+            if(selected_line == true){
+                attron(COLOR_PAIR(16));
+            }
+
             break;
     }
 }
 
 // Helper function to print tokens and update cursor position
 void print_token(const char* text) {
+    
     mvprintw(row, col, "%s", text);  // Print at current row and column
     col += strlen(text);             // Move the cursor forward
 }
 
 // Updated runLexer function to accept row argument
-void runLexer(const std::string& input, int startRow) {
+void runLexer(const std::string& input, int startRow, bool selected) {
     std::istringstream iss(input);   // Use string as input stream for lexer
     yyFlexLexer lexer(&iss);
+    selected_line = selected;
     row = startRow;  // Initialize row with the passed argument
     col = 6;         // Reset column position
     lexer.yylex();   // Tokenize and colorize input

@@ -8,7 +8,7 @@
 #include <dirent.h> // For directory operations on UNIX systems
 
 using namespace std;
-extern void runLexer(const string& input, int startRow); // Updated function declaration
+extern void runLexer(const string& input, int startRow, bool selected); // Updated function declaration
 
 
 class Editor {
@@ -17,17 +17,23 @@ public:
         initscr();  // Start ncurses mode
         start_color(); // Initialize color support
 
-        init_pair(1, COLOR_RED, COLOR_BLACK);      // For keywords like "int", "float"
-        init_pair(2, COLOR_GREEN, COLOR_BLACK);    // For strings
-        init_pair(3, COLOR_YELLOW, COLOR_BLACK);   // For comments
-        init_pair(4, COLOR_BLUE, COLOR_BLACK);     // For numbers
-        init_pair(5, COLOR_MAGENTA, COLOR_BLACK);  // For other identifiers
+        init_pair(1, COLOR_RED, 234);      // For keywords like "int", "float"
+        init_pair(2, COLOR_GREEN, 234);    // For strings
+        init_pair(3, COLOR_YELLOW, 234);   // For comments
+        init_pair(4, COLOR_BLUE, 234);     // For numbers
+        init_pair(5, 186, 234);  // For other identifiers
+
+        init_pair(101, COLOR_RED, 235);      // For keywords like "int", "float"
+        init_pair(102, COLOR_GREEN, 235);    // For strings
+        init_pair(103, COLOR_YELLOW, 235);   // For comments
+        init_pair(104, COLOR_BLUE, 235);     // For numbers
+        init_pair(105, 186, 235);  // For other identifiers
 
 
         init_pair(13, COLOR_WHITE, 234);
-        init_pair(14, 106, 234);    // for line numbers
+        init_pair(14, 106, 234);    // for line numbers other
 
-        init_pair(15, 107, 235);    // for line numbers
+        init_pair(15, 107, 235);    // for line numbers selected
         init_pair(16, COLOR_WHITE, 235);
         bkgd(COLOR_PAIR(13));
 
@@ -143,12 +149,12 @@ private:
                     addch(' ');
                 }
                 
-                runLexer(text[i + topLine].c_str(), i);
+                runLexer(text[i + topLine].c_str(), i, true);
                 attroff(COLOR_PAIR(16)); // Turn off line number color
 
             } else {
 
-                runLexer(text[i + topLine].c_str(), i);
+                runLexer(text[i + topLine].c_str(), i, false);
                 attron(COLOR_PAIR(14)); // Turn on line number color
                 mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
                 attroff(COLOR_PAIR(14)); // Turn off line number color
