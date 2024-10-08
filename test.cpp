@@ -1,8 +1,9 @@
 #include <string>
-extern void runLexer(const std::string& input);
+using namespace std;
+extern void runLexer(const string& input);
 
 int main() {
-    std::string input = R"(int main() {
+    string input = R"(int main() {
     float num = 3.14;
     // This is a comment
     if (num > 2) {
