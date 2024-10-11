@@ -23,11 +23,19 @@ public:
         init_pair(4, COLOR_BLUE, 234);     // For numbers
         init_pair(5, 186, 234);  // For other identifiers
 
+        init_pair(6, 50, 234);    // For <>
+        init_pair(7, 74, 234);    // For #include
+        init_pair(8, 62, 234);    // For functions
+
         init_pair(101, COLOR_RED, 235);      // For keywords like "int", "float"
         init_pair(102, COLOR_GREEN, 235);    // For strings
         init_pair(103, COLOR_YELLOW, 235);   // For comments
         init_pair(104, COLOR_BLUE, 235);     // For numbers
         init_pair(105, 186, 235);  // For other identifiers
+
+        init_pair(106, 50, 235);    // For <>
+        init_pair(107, 74, 235);    // For #include
+        init_pair(108, 62, 235);    // For functions
 
 
         init_pair(13, COLOR_WHITE, 234);

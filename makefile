@@ -35,4 +35,4 @@ run: $(TARGET)
 
 # Clean the build
 clean:
-	rm -f $(OBJ) $(TARGET) $(FLEX_OUTPUT) syntax_highlighter
+	rm -f $(OBJ) $(TARGET) $(FLEX_OUTPUT)
