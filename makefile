@@ -8,7 +8,7 @@ FLEX_SRC = syntax_highlighter.l
 FLEX_OUTPUT = syntax_highlighter.cpp
 
 # Executable name
-TARGET = syntax_highlighter
+TARGET = texteditor
 
 # ncurses library for color highlighting
 LIBS = -lncurses

@@ -1,5 +1,6 @@
 # Text-editor
 
 
-Test
+Test after merge and makefile
+
 
