@@ -81,6 +81,15 @@ public:
                     backspace();
                 } else if (ch == '\n') {
                     insertNewline();
+                } else if (ch == KEY_SRIGHT || KEY_SLEFT) {
+                    if (!selecting) {
+                        selecting = true; // Start selection
+                        start_row = cursorY;
+                        start_col = cursorX;
+                    }
+                    end_row = cursorY;
+                    end_col = cursorX;
+                    // i have to call moveCursor... and revert re color
                 } else {
                     insertChar(ch);
                 }
@@ -138,6 +147,10 @@ private:
     bool inCommandMode;
     string commandBuffer;
     bool allText = true;
+
+    bool selecting = false;           // Is selection mode on
+    int start_row, start_col;         // Start position for selection
+    int end_row, end_col;             // End position for selection
 
     void displayText() {
         int visibleLines = screenHeight;  // Adjust for the status line at the bottom
