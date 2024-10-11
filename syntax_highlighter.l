@@ -1,79 +1,66 @@
 %{
 #include <ncurses.h>
-//#include <FlexLexer.h>
-#include <iostream>
-#include <sstream>
+#include <sstream>  // Include the required header for std::istringstream
+#include <cstring>  // For strlen
+#include <string>   // For std::string
 
 extern int yylex();
-void runLexer(const std::string& input);
-void apply_color(int color);
+void apply_color(int color);  // Function to apply colors
+void print_token(const char* text);
 
-int row = 0, col = 0;
+int row = 0, col = 0;  // Track cursor position
+bool selected_line = false;
 %}
 
 %option noyywrap
 %option c++
+%option input
 
 %%
 
-"int"|"float"|"if"|"else"|"return" {
-    apply_color(1);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
-    apply_color(0);
+"int"|"float"|"if"|"else"|"return"|"string" {
+    apply_color(1);  // Apply keyword color (e.g., red)
+    print_token(yytext);
+    apply_color(0);  // Reset color
 }
 
 \"([^"\\]|\\.)*\" {
-    apply_color(2);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    apply_color(2);  // Apply string color (e.g., green)
+    print_token(yytext);
     apply_color(0);
 }
 
 "//".* {
-    apply_color(3);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    apply_color(3);  // Apply comment color (e.g., yellow)
+    print_token(yytext);
     apply_color(0);
 }
 
 "/*"([^*]|\*+[^*/])*\*+"/" {
-    apply_color(3);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    apply_color(3);  // Apply comment color (e.g., yellow)
+    print_token(yytext);
     apply_color(0);
 }
 
 [-+]?[0-9]+(\.[0-9]+)? {
-    apply_color(4);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    apply_color(4);  // Apply number color (e.g., blue)
+    print_token(yytext);
     apply_color(0);
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    apply_color(5);
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    apply_color(5);  // Apply identifier color (e.g., magenta)
+    print_token(yytext);
     apply_color(0);
 }
 
 . { 
-    mvprintw(row, col, "%s", yytext);
-    col = col + strlen(yytext);
-    refresh();
+    print_token(yytext);  // For any single character, print it without color
 }
 
 \n {
-    mvprintw(row++, col, "%s", yytext);
+    row++;
     col = 0;
-    refresh();
 }
 
 %%
@@ -81,19 +68,37 @@ int row = 0, col = 0;
 void apply_color(int color) {
     switch (color) {
         case 1:
-            attron(COLOR_PAIR(1));
+            if(selected_line == true){
+                color = 100 + color;
+                for (int j = 0; j < 50; j++) {
+                    addch(' ');
+                }
+            }
+            attron(COLOR_PAIR(color));
             break;
         case 2:
-            attron(COLOR_PAIR(2));
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
             break;
         case 3:
-            attron(COLOR_PAIR(3));
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
             break;
         case 4:
-            attron(COLOR_PAIR(4));
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
             break;
         case 5:
-            attron(COLOR_PAIR(5));
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
             break;
         default:
             attroff(COLOR_PAIR(1));
@@ -101,27 +106,33 @@ void apply_color(int color) {
             attroff(COLOR_PAIR(3));
             attroff(COLOR_PAIR(4));
             attroff(COLOR_PAIR(5));
+            attroff(COLOR_PAIR(101));
+            attroff(COLOR_PAIR(102));
+            attroff(COLOR_PAIR(103));
+            attroff(COLOR_PAIR(104));
+            attroff(COLOR_PAIR(105));
+
+            if(selected_line == true){
+                attron(COLOR_PAIR(16));
+            }
+
             break;
     }
 }
 
-void runLexer(const std::string& input) {
-    std::istringstream iss(input);
-    yyFlexLexer lexer(&iss);
-
-    initscr();
-    start_color();
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);
-    init_pair(3, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(4, COLOR_BLUE, COLOR_BLACK);
-    init_pair(5, COLOR_MAGENTA, COLOR_BLACK);
-
-    lexer.yylex();
-
+// Helper function to print tokens and update cursor position
+void print_token(const char* text) {
     
-
-    getch();
-    endwin();
+    mvprintw(row, col, "%s", text);  // Print at current row and column
+    col += strlen(text);             // Move the cursor forward
 }
 
+// Updated runLexer function to accept row argument
+void runLexer(const std::string& input, int startRow, bool selected) {
+    std::istringstream iss(input);   // Use string as input stream for lexer
+    yyFlexLexer lexer(&iss);
+    selected_line = selected;
+    row = startRow;  // Initialize row with the passed argument
+    col = 6;         // Reset column position
+    lexer.yylex();   // Tokenize and colorize input
+}
