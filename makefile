@@ -8,7 +8,7 @@ FLEX_SRC = syntax_highlighter.l
 FLEX_OUTPUT = syntax_highlighter.cpp
 
 # Executable name
-TARGET = syntax_highlighter
+TARGET = texteditor
 
 # ncurses library for color highlighting
 LIBS = -lncurses
@@ -25,7 +25,7 @@ syntax_highlighter.o: $(FLEX_SRC)
 	$(FLEX) -o $(FLEX_OUTPUT) $(FLEX_SRC)
 	$(CXX) $(CXXFLAGS) -c $(FLEX_OUTPUT)
 
-# Compile the test program
+# Compile the text editor
 texteditor.o: texteditor.cpp
 	$(CXX) $(CXXFLAGS) -c texteditor.cpp
 
@@ -35,4 +35,4 @@ run: $(TARGET)
 
 # Clean the build
 clean:
-	rm -f $(OBJ) $(TARGET) $(FLEX_OUTPUT)
+	rm -f $(OBJ) $(TARGET) $(FLEX_OUTPUT) syntax_highlighter
