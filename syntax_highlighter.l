@@ -18,13 +18,19 @@ bool selected_line = false;
 
 %%
 
-"int"|"float"|"if"|"else"|"return"|"string" {
+"int"|"float"|"else"|"if"|"for"|"while"|"return"|"string"|"void"|"else if" {
     apply_color(1);  // Apply keyword color (e.g., red)
     print_token(yytext);
     apply_color(0);  // Reset color
 }
 
 \"([^"\\]|\\.)*\" {
+    apply_color(2);  // Apply string color (e.g., green)
+    print_token(yytext);
+    apply_color(0);
+}
+
+\'([^"\\]|\\.)*\' {
     apply_color(2);  // Apply string color (e.g., green)
     print_token(yytext);
     apply_color(0);
@@ -52,6 +58,26 @@ bool selected_line = false;
     apply_color(5);  // Apply identifier color (e.g., magenta)
     print_token(yytext);
     apply_color(0);
+}
+
+"<"[a-zA-Z0-9._]+">" {
+    apply_color(6);  // Apply string color (e.g., green)
+    print_token(yytext);
+    apply_color(0);
+}
+
+"#include" {
+    apply_color(7);  // Apply string color (e.g., green)
+    print_token(yytext);
+    apply_color(0);
+}
+
+[a-zA-Z_][a-zA-Z0-9_]*[ \t]*"(" {
+    apply_color(8);  // Apply string color (e.g., green)
+    yytext[strlen(yytext)-1] = '\0';  // Remove the "(" from yytext
+    print_token(yytext);
+    apply_color(0);
+    unput('(');  // Put back the '(' for separate handling
 }
 
 . { 
@@ -100,17 +126,41 @@ void apply_color(int color) {
             }
             attron(COLOR_PAIR(color));
             break;
+        case 6:
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
+            break;
+        case 7:
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
+            break;
+        case 8:
+            if(selected_line == true){
+                color = 100 + color; 
+            }
+            attron(COLOR_PAIR(color));
+            break;
         default:
             attroff(COLOR_PAIR(1));
             attroff(COLOR_PAIR(2));
             attroff(COLOR_PAIR(3));
             attroff(COLOR_PAIR(4));
             attroff(COLOR_PAIR(5));
+            attroff(COLOR_PAIR(6));
+            attroff(COLOR_PAIR(7));
+            attroff(COLOR_PAIR(8));
             attroff(COLOR_PAIR(101));
             attroff(COLOR_PAIR(102));
             attroff(COLOR_PAIR(103));
             attroff(COLOR_PAIR(104));
             attroff(COLOR_PAIR(105));
+            attroff(COLOR_PAIR(106));
+            attroff(COLOR_PAIR(107));
+            attroff(COLOR_PAIR(108));
 
             if(selected_line == true){
                 attron(COLOR_PAIR(16));

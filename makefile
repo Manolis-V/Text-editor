@@ -35,4 +35,4 @@ run: $(TARGET)
 
 # Clean the build
 clean:
-	rm -f $(OBJ) $(TARGET) $(FLEX_OUTPUT) ./$(TARGET)
+	rm -f $(OBJ) $(TARGET) $(FLEX_OUTPUT)

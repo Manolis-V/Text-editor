@@ -23,11 +23,19 @@ public:
         init_pair(4, COLOR_BLUE, 234);     // For numbers
         init_pair(5, 186, 234);  // For other identifiers
 
+        init_pair(6, 50, 234);    // For <>
+        init_pair(7, 74, 234);    // For #include
+        init_pair(8, 62, 234);    // For functions
+
         init_pair(101, COLOR_RED, 235);      // For keywords like "int", "float"
         init_pair(102, COLOR_GREEN, 235);    // For strings
         init_pair(103, COLOR_YELLOW, 235);   // For comments
         init_pair(104, COLOR_BLUE, 235);     // For numbers
         init_pair(105, 186, 235);  // For other identifiers
+
+        init_pair(106, 50, 235);    // For <>
+        init_pair(107, 74, 235);    // For #include
+        init_pair(108, 62, 235);    // For functions
 
 
         init_pair(13, COLOR_WHITE, 234);
@@ -73,6 +81,15 @@ public:
                     backspace();
                 } else if (ch == '\n') {
                     insertNewline();
+                } else if (ch == KEY_SRIGHT || KEY_SLEFT) {
+                    if (!selecting) {
+                        selecting = true; // Start selection
+                        start_row = cursorY;
+                        start_col = cursorX;
+                    }
+                    end_row = cursorY;
+                    end_col = cursorX;
+                    // i have to call moveCursor... and revert re color
                 } else {
                     insertChar(ch);
                 }
@@ -130,6 +147,10 @@ private:
     bool inCommandMode;
     string commandBuffer;
     bool allText = true;
+
+    bool selecting = false;           // Is selection mode on
+    int start_row, start_col;         // Start position for selection
+    int end_row, end_col;             // End position for selection
 
     void displayText() {
         int visibleLines = screenHeight;  // Adjust for the status line at the bottom
