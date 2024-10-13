@@ -81,15 +81,6 @@ public:
                     backspace();
                 } else if (ch == '\n') {
                     insertNewline();
-                } else if (ch == KEY_SRIGHT || KEY_SLEFT) {
-                    if (!selecting) {
-                        selecting = true; // Start selection
-                        start_row = cursorY;
-                        start_col = cursorX;
-                    }
-                    end_row = cursorY;
-                    end_col = cursorX;
-                    // i have to call moveCursor... and revert re color
                 } else {
                     insertChar(ch);
                 }
@@ -123,6 +114,7 @@ public:
     }
 
     void saveFile(const string& filename) {
+        clear();
         ofstream file(filename);
         if (!file) {
             showStatusMessage("Error saving file.");
