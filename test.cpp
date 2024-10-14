@@ -1,179 +1,93 @@
 #include <ncurses.h>
-#include <filesystem>
-#include <vector>
-#include <string>
-#include <fstream>
-#include <dirent.h>
-//g++ -std=c++17 -lncurses -o test test.cpp
+#include <string.h>
 
-using namespace std;
-bool tabsVisible = true; // To track the visibility of the tabs
-// Function to draw the tabs on the left side
-void drawTabs(const vector<string>& tabs, int selectedTab) {
-    for (size_t i = 0; i < tabs.size(); ++i) {
-        if (i == selectedTab) {
-            attron(A_REVERSE); // Highlight the selected tab
-        }
-        mvprintw(i + 1, 1, "%s", tabs[i].c_str()); // Draw each tab
-        if (i == selectedTab) {
-            attroff(A_REVERSE); // Turn off highlighting
-        }
-    }
-}
-
-// Function to display a message on the right side
-void displayMessage(const string& message) {
-    
-    if (tabsVisible) {
-        mvprintw(1, 25, "%s", message.c_str()); // Display message starting at column 25
-    } else {
-        mvprintw(1, 1, "%s", message.c_str()); // Display message starting at column 1 when tabs are hidden
-    }
-}
-
-// Function to draw a vertical separator
-void drawSeparator(bool sep) {
-    if (sep) {
-        for (int i = 0; i < LINES; ++i) {
-            mvaddch(i, 24, '|'); // Draw a vertical line at column 24
-        }
-    } else {
-        for (int i = 0; i < LINES; ++i) {
-            mvaddch(i, 24, ' '); // Clear the separator
-        }
-    }
-}
-
-// Function to display file contents in the right panel
-void displayFileContent(const string& filename) {
-    clear(); // Clear the screen
-
-    ifstream file(filename);
-    if (!file.is_open()) {
-        mvprintw(0, 25, "Error opening file: %s", filename.c_str());
-        refresh();
-        getch(); // Wait for user input
-        return; // Exit function
-    }
-
-    string line;
-    int row = 0;
-    while (getline(file, line)) {
-        mvprintw(row, 25, "%s", line.c_str()); // Display each line of the file
-        row++;
-        if (row >= LINES - 1) { // Prevent overflow
-            break; // Stop if we reach the bottom of the window
-        }
-    }
-
-    file.close();
-    refresh(); // Refresh to show file contents
-}
+void highlight_selection(const char *text, int start, int end);
+void delete_selection(char *text, int start, int end);
 
 int main() {
-    initscr();                 // Initialize ncurses
-    noecho();                  // Do not echo input characters
-    keypad(stdscr, TRUE);      // Enable special keys (like arrow keys)
-    curs_set(0);               // Hide the cursor for a cleaner look
-
-    vector<string> tabs;       // Vector to hold tab names
-    const string directory = "."; // Current directory
-
+    initscr();
+    noecho();
+    keypad(stdscr, TRUE);
+    curs_set(1);
     
-    // Read all files in the current directory using dirent.h
-    DIR* dir;
-    struct dirent* entry;
+    // Sample content to edit
+    char text[1024] = "This is a sample text. You can mark and delete this text.";
+    int len = strlen(text);
 
-    if ((dir = opendir(".")) != nullptr) {
-        while ((entry = readdir(dir)) != nullptr) {
-            if (entry->d_type == DT_REG) {  // Only regular files
-                tabs.push_back(entry->d_name);
-            }
-        }
-        closedir(dir);
-    }
+    int cursor_pos = 0;  // Current cursor position
+    int mark_start = -1; // Start of marked text (-1 means no selection)
+    int mark_end = -1;   // End of marked text
 
-    if (tabs.empty()) {
-        mvprintw(1, 1, "No files found in the directory."); // Message if no files
-        refresh();
-        getch(); // Wait for a key press
-        endwin(); // End ncurses mode
-        return 0;
-    }
-
-    int selectedTab = 0; // Index of the selected tab
-    string message = "Press LEFT/RIGHT to navigate tabs, 'Ctrl + H' to toggle tabs, 'Enter' to open file"; // Instructions message
-    
-
-    // Draw the initial screen
-    drawTabs(tabs, selectedTab);
-    drawSeparator(true);
-    refresh(); // Initial refresh
-
-    // Main loop for user input
     int ch;
-    while (true) {
-        ch = getch(); // Wait for user input
-        if (ch == 'q') break; // Exit on 'q'
-
-        // Check for Ctrl + H
-        if (ch == 8) { // 8 is the ASCII code for Ctrl + H
-
-            tabsVisible = !tabsVisible; // Toggle visibility
-            clear();
-            if (tabsVisible) {
-                drawTabs(tabs, selectedTab); // Draw tabs if visible
-                drawSeparator(true); // Draw separator if tabs are visible
-            } else {
-                drawSeparator(false); // Clear the separator if tabs are hidden
-            }
-            //displayMessage(message, tabsVisible); // Redisplay message
-            refresh(); // Refresh to show changes
-            continue; // Skip the rest of the loop
-        }
-        // Handle input and update selected tab
-        int oldSelectedTab = selectedTab; // Store old selection for comparison
+    while ((ch = getch()) != 'q') {  // Press 'q' to quit
         switch (ch) {
-            case KEY_UP:
-                if (selectedTab > 0) {
-                    selectedTab--;
-                    displayFileContent(tabs[selectedTab]);
-                }
+            case KEY_LEFT:
+                if (cursor_pos > 0) cursor_pos--;
+                mark_start = mark_end = -1;  // Reset selection
                 break;
-            case KEY_DOWN:
-                if (selectedTab < tabs.size() - 1) {
-                    selectedTab++;
-                    displayFileContent(tabs[selectedTab]);
-                }
+            case KEY_RIGHT:
+                if (cursor_pos < len) cursor_pos++;
+                mark_start = mark_end = -1;  // Reset selection
                 break;
-            case 10: // Enter key
-                clear();
-                if (tabsVisible) { // Only open file if tabs are visible
-                    displayFileContent(tabs[selectedTab]); // Display the selected file
-                    getch(); // Wait for user input before returning
-                    drawTabs(tabs, selectedTab); // Redraw the tabs
-                    drawSeparator(true); // Redraw the separator
-                    //displayMessage(message, tabsVisible); // Redisplay message
+            case 393:  // Ctrl + Left Arrow (mark text to the left)
+                if (mark_start == -1) {
+                    mark_start = cursor_pos;
                 }
+                if (cursor_pos > 0) cursor_pos--;
+                mark_end = cursor_pos;
                 break;
-            case 27: // Escape key
-                clear();
-                drawTabs(tabs, selectedTab); // Redraw the tabs
-                drawSeparator(true); // Redraw the separator
-                //displayMessage(message, tabsVisible); // Redisplay message
-                refresh();
+            case 402:  // Ctrl + Right Arrow (mark text to the right)
+                if (mark_start == -1) {
+                    mark_start = cursor_pos;
+                }
+                if (cursor_pos < len) cursor_pos++;
+                mark_end = cursor_pos;
+                break;
+            case KEY_BACKSPACE:  // Backspace/Delete
+                if (mark_start != -1 && mark_end != -1) {
+                    // If text is marked, delete the marked selection
+                    delete_selection(text, mark_start, mark_end);
+                    cursor_pos = mark_start;
+                    len = strlen(text);
+                    mark_start = mark_end = -1;  // Reset selection
+                }
                 break;
         }
-        
-        // Only redraw parts that changed if tabs are visible
-        if (tabsVisible && oldSelectedTab != selectedTab) {
-            drawTabs(tabs, selectedTab); // Update only tabs
-            drawSeparator(true); // Redraw the separator
-            //displayMessage(message, tabsVisible); // Redisplay message
-            refresh(); // Refresh to show changes
+
+        // Clear the screen and display updated text
+        clear();
+        mvprintw(0, 0, text);
+
+        // // Highlight the selected text if any
+        if (mark_start != -1 && mark_end != -1) {
+            highlight_selection(text, mark_start, mark_end);
         }
+
+        // Move the cursor to the current position
+        move(0, cursor_pos);
+        refresh();
     }
 
-    endwin(); // End ncurses mode
-    return 0; // Return success
+    endwin();
+    return 0;
+}
+
+void highlight_selection(const char *text, int start, int end) {
+    // Highlight the text between start and end    
+    attron(A_REVERSE);  // Highlight selected text with reverse video
+    if (start < end){
+        for (int i = start; i <= end-1; i++) {
+            mvprintw(0, i, "%c", text[i]);
+        }
+    } else {
+        for (int i = start - 1; i >= end; i--) {
+            mvprintw(0, i, "%c", text[i]);
+        }
+    }
+    attroff(A_REVERSE);
+}
+
+void delete_selection(char *text, int start, int end) {
+    // Remove the text between start and end by shifting the text
+    memmove(&text[start], &text[end], strlen(text) - end - 1);
 }

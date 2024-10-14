@@ -9,7 +9,8 @@
 
 using namespace std;
 extern void runLexer(const string& input, int startRow, bool selected); // Updated function declaration
-
+// Macro to help with Ctrl key combinations
+#define CTRL(x) ((x) & 0x1f) // Ctrl + x is x with the high bit cleared
 
 class Editor {
 public:
@@ -81,15 +82,10 @@ public:
                     backspace();
                 } else if (ch == '\n') {
                     insertNewline();
-                // } else if (ch == KEY_SRIGHT || KEY_SLEFT) {
-                //     if (!selecting) {
-                //         selecting = true; // Start selection
-                //         start_row = cursorY;
-                //         start_col = cursorX;
-                //     }
-                //     end_row = cursorY;
-                //     end_col = cursorX;
-                //     // i have to call moveCursor... and revert re color
+                } else if (ch == 402) {   // Ctrl + Right Arrow
+                    shiftRight();
+                } else if (ch == 393) {   // Ctrl + Left Arrow
+                    shiftLeft();
                 } else {
                     insertChar(ch);
                 }
@@ -152,6 +148,9 @@ private:
     bool selecting = false;           // Is selection mode on
     int start_row, start_col;         // Start position for selection
     int end_row, end_col;             // End position for selection
+
+    int mark_start = -1; // Start of marked text (-1 means no selection)
+    int mark_end = -1;   // End of marked text
 
     void displayText() {
         int visibleLines = screenHeight;  // Adjust for the status line at the bottom
@@ -267,6 +266,22 @@ private:
         }
     }
 
+    void shiftLeft(){
+        if (mark_start == -1) {
+            mark_start = cursorX;
+        }
+        moveCursorLeft();
+        mark_end = cursorX;
+    }
+
+    void shiftRight(){
+        if (mark_start == -1) {
+            mark_start = cursorX;
+        }
+        moveCursorRight();
+        mark_end = cursorX;
+    }
+
     void insertChar(int ch) {
         if ((char)ch == '\t') {
             text[cursorY].insert(cursorX, 4, ' ');
@@ -278,6 +293,17 @@ private:
     }
 
     void backspace() {
+        if (mark_start != -1 && mark_end != -1) {
+            // If text is marked, delete the marked selection
+            if (mark_start < mark_end) {
+                text[cursorY].erase(cursorX - mark_end + mark_start, mark_end - mark_start);
+                cursorX = cursorX - mark_end + mark_start;
+            } else {
+                text[cursorY].erase(cursorX, mark_start - mark_end);
+            }
+            mark_start = mark_end = -1;  // Reset selection
+            return;
+        }
         if (cursorX > 0) {
             // When in line changes
             text[cursorY].erase(cursorX - 1, 1);
