@@ -1,7 +1,8 @@
 #
-hello
-
-
-Test after merge and makefile
-
-test after fixing ";w"
+manolis
+lefteris
+manos
+stelios
+andreas
+serafim
+stefanos

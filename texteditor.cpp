@@ -86,6 +86,10 @@ public:
                     shiftRight();
                 } else if (ch == 393) {   // Ctrl + Left Arrow
                     shiftLeft();
+                } else if (ch == 337) {   // Ctrl + Up Arrow
+                    shiftUp();
+                } else if (ch == 336) {   // Ctrl + Down Arrow
+                    shiftDown();
                 } else {
                     insertChar(ch);
                 }
@@ -149,8 +153,12 @@ private:
     int start_row, start_col;         // Start position for selection
     int end_row, end_col;             // End position for selection
 
-    int mark_start = -1; // Start of marked text (-1 means no selection)
-    int mark_end = -1;   // End of marked text
+    // int mark_start_X, mark_end_X, mark_start_Y , mark_end_Y = -1; // Start of marked text (-1 means no selection)
+
+    int mark_start_X = -1;
+    int mark_end_X = -1;
+    int mark_start_Y = -1;
+    int mark_end_Y = -1;
 
     void displayText() {
         int visibleLines = screenHeight;  // Adjust for the status line at the bottom
@@ -266,20 +274,45 @@ private:
         }
     }
 
+    void shiftUp(){
+        if (mark_start_Y == -1) {
+            mark_start_Y = cursorY;
+            mark_start_X = cursorX;
+        }
+        moveCursorUp();
+        mark_end_Y = cursorY;
+        mark_end_X = cursorX;
+    }
+
+    void shiftDown(){
+        if (mark_start_Y == -1 && mark_start_X == -1) {
+            mark_start_Y = cursorY;
+            mark_start_X = cursorX;
+        }
+        // printw("Key pressed: %d\n", mark_start_Y);
+        moveCursorDown();
+        mark_end_Y = cursorY;
+        mark_end_X = cursorX;
+    }
+
     void shiftLeft(){
-        if (mark_start == -1) {
-            mark_start = cursorX;
+        if (mark_start_X == -1) {
+            mark_start_X = cursorX;
+            mark_start_Y = cursorY;
         }
         moveCursorLeft();
-        mark_end = cursorX;
+        mark_end_X = cursorX;
+        mark_end_Y = cursorY;
     }
 
     void shiftRight(){
-        if (mark_start == -1) {
-            mark_start = cursorX;
+        if (mark_start_X == -1) {
+            mark_start_X = cursorX;
+            mark_start_Y = cursorY;
         }
         moveCursorRight();
-        mark_end = cursorX;
+        mark_end_X = cursorX;
+        mark_end_Y = cursorY;
     }
 
     void insertChar(int ch) {
@@ -291,19 +324,53 @@ private:
             cursorX++;
         }
     }
-
+    /**
+     * @brief Basic functionality: ether it is just a backspace, ether it deletes marked text.
+     * 
+     * @note No bugs.
+     */
     void backspace() {
-        if (mark_start != -1 && mark_end != -1) {
-            // If text is marked, delete the marked selection
-            if (mark_start < mark_end) {
-                text[cursorY].erase(cursorX - mark_end + mark_start, mark_end - mark_start);
-                cursorX = cursorX - mark_end + mark_start;
+
+        if (mark_start_Y != -1 && mark_end_Y != -1 && mark_start_X != -1 && mark_end_X != -1) {
+            
+            if (mark_start_Y == mark_end_Y) {
+
+                if (mark_start_X < mark_end_X) {
+                    text[cursorY].erase(mark_start_X, mark_end_X - mark_start_X);
+                    cursorX = mark_start_X;
+                } else {
+                    text[cursorY].erase(mark_end_X, mark_start_X - mark_end_X);
+                }
             } else {
-                text[cursorY].erase(cursorX, mark_start - mark_end);
+
+                if (mark_start_Y > mark_end_Y) {
+                    int temp = mark_start_Y;
+                    mark_start_Y = mark_end_Y;
+                    mark_end_Y = temp;
+
+                    temp = mark_start_X;
+                    mark_start_X = mark_end_X;
+                    mark_end_X = temp;
+                }
+                text[mark_start_Y].erase(mark_start_X, text[mark_start_Y].length());
+                text[mark_end_Y].erase(0, mark_end_X);
+                text[mark_start_Y] += text[mark_end_Y];
+
+                for (int i = 0; i < mark_end_Y - mark_start_Y; i++) {
+                    text.erase(text.begin() + mark_end_Y - i);
+                }
+                cursorX = mark_start_X;
+                cursorY = mark_start_Y;
             }
-            mark_start = mark_end = -1;  // Reset selection
+            mark_start_X = -1;
+            mark_end_X = -1;
+            mark_start_Y = -1;
+            mark_end_Y = -1;
+            
+            clear();
             return;
         }
+
         if (cursorX > 0) {
             // When in line changes
             text[cursorY].erase(cursorX - 1, 1);
