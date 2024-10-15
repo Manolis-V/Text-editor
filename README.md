@@ -1,12 +1,8 @@
 #
-nvin
-ndidbr
-dcbeuwbef
-greg
-grg
-
-vreglzp
-enwgiweng
-hello
-abcde
- Text-editor
+manolis
+lefteris
+manos
+stelios
+andreas
+serafim
+stefanos
