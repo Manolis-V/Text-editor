@@ -161,14 +161,13 @@ private:
                 mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
                 attroff(COLOR_PAIR(15)); // Turn off line number color 
   
-                attron(COLOR_PAIR(16)); // Turn on line number color
+                attron(COLOR_PAIR(16)); // Turn on line number color              
                 for (int j = 0; j < screenWidth; j++) {
                     addch(' ');
                 }
                 
-                runLexer(text[i + topLine].c_str(), i, true);
                 attroff(COLOR_PAIR(16)); // Turn off line number color
-
+                runLexer(text[i + topLine].c_str(), i, true);
             } else {
 
                 runLexer(text[i + topLine].c_str(), i, false);
@@ -315,6 +314,10 @@ private:
     }
 
     void handleCursor(int ch) {
+        mark_start_X = -1;
+        mark_end_X = -1;
+        mark_start_Y = -1;
+        mark_end_Y = -1;
         if (ch == KEY_UP) {
             moveCursorUp();
         } else if (ch == KEY_DOWN) {
