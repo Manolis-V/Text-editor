@@ -70,26 +70,14 @@ public:
 
                 if (ch == ':') {
                     enterCommandMode();
-                } else if (ch == KEY_UP) {
-                    moveCursorUp();
-                } else if (ch == KEY_DOWN) {
-                    moveCursorDown();
-                } else if (ch == KEY_LEFT) {
-                    moveCursorLeft();
-                } else if (ch == KEY_RIGHT) {
-                    moveCursorRight();
+                } else if (ch == KEY_UP ||ch == KEY_DOWN || ch == KEY_LEFT || ch == KEY_RIGHT) {
+                    handleCursor(ch);
                 }  else if (ch == KEY_BACKSPACE || ch == 127) {
                     backspace();
                 } else if (ch == '\n') {
                     insertNewline();
-                } else if (ch == 402) {   // Ctrl + Right Arrow
-                    shiftRight();
-                } else if (ch == 393) {   // Ctrl + Left Arrow
-                    shiftLeft();
-                } else if (ch == 337) {   // Ctrl + Up Arrow
-                    shiftUp();
-                } else if (ch == 336) {   // Ctrl + Down Arrow
-                    shiftDown();
+                } else if (ch == 402 || ch == 393 || ch == 337 || ch == 336) {
+                    handleShift(ch);
                 } else {
                     insertChar(ch);
                 }
@@ -173,14 +161,13 @@ private:
                 mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
                 attroff(COLOR_PAIR(15)); // Turn off line number color 
   
-                attron(COLOR_PAIR(16)); // Turn on line number color
+                attron(COLOR_PAIR(16)); // Turn on line number color              
                 for (int j = 0; j < screenWidth; j++) {
                     addch(' ');
                 }
                 
-                runLexer(text[i + topLine].c_str(), i, true);
                 attroff(COLOR_PAIR(16)); // Turn off line number color
-
+                runLexer(text[i + topLine].c_str(), i, true);
             } else {
 
                 runLexer(text[i + topLine].c_str(), i, false);
@@ -285,11 +272,10 @@ private:
     }
 
     void shiftDown(){
-        if (mark_start_Y == -1 && mark_start_X == -1) {
+        if (mark_start_Y == -1) {
             mark_start_Y = cursorY;
             mark_start_X = cursorX;
         }
-        // printw("Key pressed: %d\n", mark_start_Y);
         moveCursorDown();
         mark_end_Y = cursorY;
         mark_end_X = cursorX;
@@ -313,6 +299,34 @@ private:
         moveCursorRight();
         mark_end_X = cursorX;
         mark_end_Y = cursorY;
+    }
+
+    void handleShift(int ch) {
+        if (ch == 402) {   // Ctrl + Right Arrow
+            shiftRight();
+        } else if (ch == 393) {   // Ctrl + Left Arrow
+            shiftLeft();
+        } else if (ch == 337) {   // Ctrl + Up Arrow
+            shiftUp();
+        } else if (ch == 336) {   // Ctrl + Down Arrow
+            shiftDown();
+        }
+    }
+
+    void handleCursor(int ch) {
+        mark_start_X = -1;
+        mark_end_X = -1;
+        mark_start_Y = -1;
+        mark_end_Y = -1;
+        if (ch == KEY_UP) {
+            moveCursorUp();
+        } else if (ch == KEY_DOWN) {
+            moveCursorDown();
+        } else if (ch == KEY_LEFT) {
+            moveCursorLeft();
+        } else if (ch == KEY_RIGHT) {
+            moveCursorRight();
+        }
     }
 
     void insertChar(int ch) {
