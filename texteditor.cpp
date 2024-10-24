@@ -166,8 +166,9 @@ private:
                     addch(' ');
                 }
                 
-                attroff(COLOR_PAIR(16)); // Turn off line number color
                 runLexer(text[i + topLine].c_str(), i, true);
+                attroff(COLOR_PAIR(16)); // Turn off line number color
+                
             } else {
 
                 runLexer(text[i + topLine].c_str(), i, false);
