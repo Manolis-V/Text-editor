@@ -9,8 +9,6 @@
 
 using namespace std;
 extern void runLexer(const string& input, int startRow, bool selected); // Updated function declaration
-// Macro to help with Ctrl key combinations
-#define CTRL(x) ((x) & 0x1f) // Ctrl + x is x with the high bit cleared
 
 class Editor {
 public:
@@ -165,16 +163,16 @@ private:
                 for (int j = 0; j < screenWidth; j++) {
                     addch(' ');
                 }
-                
-                attroff(COLOR_PAIR(16)); // Turn off line number color
                 runLexer(text[i + topLine].c_str(), i, true);
+                attroff(COLOR_PAIR(16)); // Turn off line number color
+                
             } else {
 
                 runLexer(text[i + topLine].c_str(), i, false);
                 attron(COLOR_PAIR(14)); // Turn on line number color
                 mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
                 attroff(COLOR_PAIR(14)); // Turn off line number color
-            
+                
             }
         }
 
