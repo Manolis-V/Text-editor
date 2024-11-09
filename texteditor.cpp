@@ -9,8 +9,6 @@
 
 using namespace std;
 extern void runLexer(const string& input, int startRow, bool selected); // Updated function declaration
-// Macro to help with Ctrl key combinations
-#define CTRL(x) ((x) & 0x1f) // Ctrl + x is x with the high bit cleared
 
 class Editor {
 public:
@@ -44,6 +42,10 @@ public:
 
         init_pair(15, 107, 235);    // for line numbers selected
         init_pair(16, COLOR_WHITE, 235);
+
+        init_pair(22, COLOR_BLACK, COLOR_WHITE);
+
+
         bkgd(COLOR_PAIR(13));
 
         raw();                  
@@ -138,8 +140,8 @@ private:
     bool allText = true;
 
     bool selecting = false;           // Is selection mode on
-    int start_row, start_col;         // Start position for selection
-    int end_row, end_col;             // End position for selection
+    // int start_row, start_col;         // Start position for selection
+    // int end_row, end_col;             // End position for selection
 
     // int mark_start_X, mark_end_X, mark_start_Y , mark_end_Y = -1; // Start of marked text (-1 means no selection)
 
@@ -175,7 +177,22 @@ private:
                 attron(COLOR_PAIR(14)); // Turn on line number color
                 mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
                 attroff(COLOR_PAIR(14)); // Turn off line number color
-            
+                
+            }
+            // added this for marked text
+            if (selecting == true) {
+
+                attron(COLOR_PAIR(14)); // Turn on line number color
+                mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
+                attroff(COLOR_PAIR(14)); // Turn off line number color
+
+                int k;
+                attron(COLOR_PAIR(22));
+                for (k = mark_start_X; k < mark_end_X; k++) {
+                    const string& line = text[mark_end_Y];
+                    mvprintw(mark_start_Y, k+6, "%c", line[k]);
+                }
+                attroff(COLOR_PAIR(22));
             }
         }
 
@@ -303,6 +320,7 @@ private:
     }
 
     void handleShift(int ch) {
+        selecting = true;
         if (ch == 402) {   // Ctrl + Right Arrow
             shiftRight();
         } else if (ch == 393) {   // Ctrl + Left Arrow
@@ -315,6 +333,7 @@ private:
     }
 
     void handleCursor(int ch) {
+        selecting = false;
         mark_start_X = -1;
         mark_end_X = -1;
         mark_start_Y = -1;
@@ -348,15 +367,15 @@ private:
 
         if (mark_start_Y != -1 && mark_end_Y != -1 && mark_start_X != -1 && mark_end_X != -1) {
             
-            if (mark_start_Y == mark_end_Y) {
+            if (mark_start_Y == mark_end_Y) {       // in the same line
 
-                if (mark_start_X < mark_end_X) {
+                if (mark_start_X < mark_end_X) {    // shift + right arrows
                     text[cursorY].erase(mark_start_X, mark_end_X - mark_start_X);
                     cursorX = mark_start_X;
-                } else {
+                } else {                            // shift + left arrows
                     text[cursorY].erase(mark_end_X, mark_start_X - mark_end_X);
                 }
-            } else {
+            } else {                                // multiline
 
                 if (mark_start_Y > mark_end_Y) {
                     int temp = mark_start_Y;
@@ -367,7 +386,7 @@ private:
                     mark_start_X = mark_end_X;
                     mark_end_X = temp;
                 }
-                text[mark_start_Y].erase(mark_start_X, text[mark_start_Y].length());
+                text[mark_start_Y].erase(mark_start_X, text[mark_start_Y].length());    // first and last lines
                 text[mark_end_Y].erase(0, mark_end_X);
                 text[mark_start_Y] += text[mark_end_Y];
 
