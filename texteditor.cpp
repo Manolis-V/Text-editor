@@ -187,9 +187,41 @@ private:
 
                 int k;
                 attron(COLOR_PAIR(22));
-                for (k = mark_start_X; k < mark_end_X; k++) {
-                    const string& line = text[mark_end_Y];
-                    mvprintw(mark_start_Y, k+6, "%c", line[k]);
+                // this works
+                if (mark_start_Y == mark_end_Y) {
+                    if ((mark_start_X < mark_end_X)) {
+                        for (k = mark_start_X; k < mark_end_X; k++) {
+                            const string& line = text[mark_start_Y];
+                            mvprintw(mark_start_Y, k+6, "%c", line[k]);
+                        }
+                    } else {
+                        for (k = mark_end_X; k < mark_start_X; k++) {
+                            const string& line = text[mark_start_Y];
+                            mvprintw(mark_start_Y, k+6, "%c", line[k]);
+                        }
+                    }
+                // a lot of bugs for the multiline version
+                // implementing same logic with marked backspace
+                } else {
+                    if (mark_start_Y < mark_end_Y) {
+                        for (k = mark_start_X; k < (int)text[mark_start_X].length(); k++) {  // first line
+                            const string& line = text[mark_start_Y];
+                            mvprintw(mark_start_Y, k+6, "%c", line[k]);
+                        }
+                        for (k = 0; k < mark_end_X; k++) {      // last line
+                            const string& line = text[mark_end_X];
+                            mvprintw(mark_end_Y, k+6, "%c", line[k]);
+                        }
+                    } else {
+                        for (k = mark_end_X; k < (int)text[mark_end_X].length(); k++) {  // first line
+                            const string& line = text[mark_end_Y];
+                            mvprintw(mark_end_Y, k+6, "%c", line[k]);
+                        }
+                        for (k = 0; k < mark_start_X; k++) {      // last line
+                            const string& line = text[mark_start_X];
+                            mvprintw(mark_start_Y, k+6, "%c", line[k]);
+                        }
+                    }
                 }
                 attroff(COLOR_PAIR(22));
             }
