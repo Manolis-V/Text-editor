@@ -27,8 +27,8 @@ Ensure you have the following installed on your system:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-repository/syntax-highlighter.git
-cd syntax-highlighter
+git clone https://github.com/Your-Name/Text-editor.git
+cd Text-editor
 ```
 2. Compile and run the project using the provided Makefile:
 ```bash
@@ -52,12 +52,14 @@ make run
 
 ```bash
 📂 syntax-highlighter/
-│── 📜 README.md            # Project documentation
-│── 📜 makefile             # Build automation script
-│── 📜 syntax_highlighter.l # Flex lexer definitions
-│── 📜 syntax_highlighter.cpp # Main C++ program
-│── 📜 syntax_highlighter.h   # Header file
-│── 📜 test.cpp             # Example usage file
+│── 📜 README.md              # Project documentation
+│── 📜 makefile               # Build automation script
+│── 📜 syntax_highlighter.l   # Flex lexer definitions
+│── 📜 syntax_highlighter.cpp 
+│── 📜 syntax_highlighter.o
+│── 📜 texteditor.cpp         # Main C++ program
+│── 📜 texteditor.o
+│── 📜 ./texteditor           # Executable
 ```
 
 ## Customization
