@@ -7,8 +7,11 @@ This is a Text Editor using Flex (Lex), C++, and Ncurses. It reads text input, a
 ## Features
 
 :white_check_mark: **Syntax Highlighting**: Recognizes keywords, comments, numbers, and function names, displaying them in different colors.
+
 :white_check_mark: **Ncurses-Based Interface**: Provides an interactive text editor-like environment with cursor movement and text rendering.
+
 :white_check_mark: **Text Selection**: Allows users to select text using ```Shift + Arrow Keys``` and delete selected content.
+
 :white_check_mark: **Shortcuts**: Supports keyboard shortcuts such as ```Ctrl + Arrow Keys``` for extended text navigation.
 
 ## Installation & Compilation
@@ -48,13 +51,13 @@ make run
 ## File Structure
 
 ```bash
-:open_file_folder: syntax-highlighter/
-│── :spiral_notepad: README.md            # Project documentation
-│── :spiral_notepad: makefile             # Build automation script
-│── :spiral_notepad: syntax_highlighter.l # Flex lexer definitions
-│── :spiral_notepad: syntax_highlighter.cpp # Main C++ program
-│── :spiral_notepad: syntax_highlighter.h   # Header file
-│── :spiral_notepad: test.cpp             # Example usage file
+📂 syntax-highlighter/
+│── 📜 README.md            # Project documentation
+│── 📜 makefile             # Build automation script
+│── 📜 syntax_highlighter.l # Flex lexer definitions
+│── 📜 syntax_highlighter.cpp # Main C++ program
+│── 📜 syntax_highlighter.h   # Header file
+│── 📜 test.cpp             # Example usage file
 ```
 
 ## Customization
