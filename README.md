@@ -40,7 +40,7 @@ make run
 - **Typing & Syntax Highlighting**: Start typing in the terminal, and the text will be automatically highlighted.
 - **Navigation**: Use the arrow keys to move the cursor.
 - **Selecting Text**: Hold ```Shift + Arrow Keys``` to select text.
-- **Deleting Selected Text**: Press Backspace to remove the selection.
+- **Deleting Selected Text**: Press Backspace to remove the selected text.
 - **Save Changes**: Press ```:w```.
 - **Save and Exit**: Press ```:wq```.
 - **Back to Menu**: Press ```:m```.
