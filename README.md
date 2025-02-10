@@ -39,9 +39,7 @@ make run
 
 - **Typing & Syntax Highlighting**: Start typing in the terminal, and the text will be automatically highlighted.
 - **Navigation**: Use the arrow keys to move the cursor.
-- **Selecting Text**:
-  1. Hold ```Shift + Arrow Keys``` to select text.
-  2. Press ```Ctrl + Arrow Keys``` for faster navigation.
+- **Selecting Text**: Hold ```Shift + Arrow Keys``` to select text.
 - **Deleting Selected Text**: Press Backspace to remove the selection.
 - **Save Changes**: Press ```:w```.
 - **Save and Exit**: Press ```:wq```.
