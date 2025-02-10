@@ -5,32 +5,32 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include <dirent.h> // For directory operations on UNIX systems
+#include <dirent.h>     // For directory operations on UNIX systems
 
 using namespace std;
-extern void runLexer(const string& input, int startRow, bool selected); // Updated function declaration
+extern void runLexer(const string& input, int startRow, bool selected);     // Updated function declaration
 
 class Editor {
 public:
     Editor() {
-        initscr();  // Start ncurses mode
-        start_color(); // Initialize color support
+        initscr();      // Start ncurses mode
+        start_color();  // Initialize color support
 
-        init_pair(1, COLOR_RED, 234);      // For keywords like "int", "float"
-        init_pair(2, COLOR_GREEN, 234);    // For strings
-        init_pair(3, COLOR_YELLOW, 234);   // For comments
-        init_pair(4, COLOR_BLUE, 234);     // For numbers
-        init_pair(5, 186, 234);  // For other identifiers
+        init_pair(1, COLOR_RED, 234);       // For keywords like "int", "float"
+        init_pair(2, COLOR_GREEN, 234);     // For strings
+        init_pair(3, COLOR_YELLOW, 234);    // For comments
+        init_pair(4, COLOR_BLUE, 234);      // For numbers
+        init_pair(5, 186, 234);             // For other identifiers
 
-        init_pair(6, 50, 234);    // For <>
-        init_pair(7, 74, 234);    // For #include
-        init_pair(8, 62, 234);    // For functions
+        init_pair(6, 50, 234);              // For <>
+        init_pair(7, 74, 234);              // For #include
+        init_pair(8, 62, 234);              // For functions
 
-        init_pair(101, COLOR_RED, 235);      // For keywords like "int", "float"
-        init_pair(102, COLOR_GREEN, 235);    // For strings
-        init_pair(103, COLOR_YELLOW, 235);   // For comments
-        init_pair(104, COLOR_BLUE, 235);     // For numbers
-        init_pair(105, 186, 235);  // For other identifiers
+        init_pair(101, COLOR_RED, 235);     // For keywords like "int", "float"
+        init_pair(102, COLOR_GREEN, 235);   // For strings
+        init_pair(103, COLOR_YELLOW, 235);  // For comments
+        init_pair(104, COLOR_BLUE, 235);    // For numbers
+        init_pair(105, 186, 235);           // For other identifiers
 
         init_pair(106, 50, 235);    // For <>
         init_pair(107, 74, 235);    // For #include
@@ -67,7 +67,7 @@ public:
      * @brief This is the main loop. It waits for user input, then handles it
      */
     void run() {
-        showFileMenu(); // Show file menu at the start
+        showFileMenu();     // Show file menu at the start
         while (true) {
             if (!inCommandMode) {
                 displayText();
@@ -95,9 +95,9 @@ public:
     void loadFile(const string& filename) {
 
         // Reset cursor position and previous cursor tracking
-        cursorY = 0; // Start at the top of the file
-        cursorX = 0; // Start at the beginning of the first line
-        previousCursorY = 0; // Reset previous cursor position
+        cursorY = 0;            // Start at the top of the file
+        cursorX = 0;            // Start at the beginning of the first line
+        previousCursorY = 0;    // Reset previous cursor position
         previousCursorX = 0;
         topLine = 0;
 
@@ -110,9 +110,9 @@ public:
         }
         file.close();
 
-        // Clear the screen and display the loaded text
-        clear();
-        displayText(); // Call displayText to show the content of the loaded file
+        
+        clear();        // Clear the screen and display the loaded text
+        displayText();  // Call displayText to show the content of the loaded file
     }
 
     void saveFile(const string& filename) {
@@ -133,16 +133,16 @@ private:
     vector<string> text = {""}; 
     int cursorX = 0; 
     int cursorY = 0; 
-    int previousCursorX = 0; // Previous cursor X position
-    int previousCursorY = 0; // Previous cursor Y position
-    int topLine = 0;  // Variable to track the top line currently displayed
+    int previousCursorX = 0;            // Previous cursor X position
+    int previousCursorY = 0;            // Previous cursor Y position
+    int topLine = 0;                    // Variable to track the top line currently displayed
     int screenWidth, screenHeight; 
     string statusMessage, file_opened; 
     bool inCommandMode;
     string commandBuffer;
     bool allText = true;
 
-    bool selecting = false;           // Is selection mode on
+    bool selecting = false;             // Is selection mode on
     int mark_start_X = -1;
     int mark_end_X = -1;
     int mark_start_Y = -1;
@@ -160,36 +160,36 @@ private:
             
             if ((i + topLine) == cursorY) {
                 
-                attron(COLOR_PAIR(15)); // Turn on line number color
-                mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
-                attroff(COLOR_PAIR(15)); // Turn off line number color 
+                attron(COLOR_PAIR(15));                     // Turn on line number color
+                mvprintw(i, 0, "%4d: ", i + 1 + topLine);   // Print line number
+                attroff(COLOR_PAIR(15));                    // Turn off line number color 
   
-                attron(COLOR_PAIR(16)); // Turn on line number color              
+                attron(COLOR_PAIR(16));            
                 for (int j = 0; j < screenWidth; j++) {
                     addch(' ');
                 }
                 
                 runLexer(text[i + topLine].c_str(), i, true);
-                attroff(COLOR_PAIR(16)); // Turn off line number color
+                attroff(COLOR_PAIR(16));
                 
             } else {
 
                 runLexer(text[i + topLine].c_str(), i, false);
-                attron(COLOR_PAIR(14)); // Turn on line number color
-                mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
-                attroff(COLOR_PAIR(14)); // Turn off line number color
+                attron(COLOR_PAIR(14));
+                mvprintw(i, 0, "%4d: ", i + 1 + topLine);   // Print line number
+                attroff(COLOR_PAIR(14));
                 
             }
             // added this for marked text
             if (selecting == true) {
 
-                attron(COLOR_PAIR(14)); // Turn on line number color
-                mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
-                attroff(COLOR_PAIR(14)); // Turn off line number color
+                attron(COLOR_PAIR(14));                     // Turn on line number color
+                mvprintw(i, 0, "%4d: ", i + 1 + topLine);   // Print line number
+                attroff(COLOR_PAIR(14));                    // Turn off line number color
 
-                if (mark_start_Y == mark_end_Y) {       // in the same line
+                if (mark_start_Y == mark_end_Y) {           // in the same line
         
-                    if (mark_start_X < mark_end_X) {    // shift + right arrows
+                    if (mark_start_X < mark_end_X) {        // shift + right arrows
                         int k;
                         attron(COLOR_PAIR(22));
                         for (k = mark_start_X; k < mark_end_X; k++) {
@@ -197,7 +197,7 @@ private:
                             mvprintw(mark_start_Y - topLine, k+6, "%c", line[k]);
                         }
                         attroff(COLOR_PAIR(22));
-                    } else {                            // shift + left arrows
+                    } else {                                // shift + left arrows
                         int k;
                         attron(COLOR_PAIR(22));
                         for (k = mark_end_X; k < mark_start_X; k++) {
@@ -225,15 +225,15 @@ private:
                             }
                         }
                     } else {
-                        for (col = mark_end_X; col < int(text[mark_end_Y].length()); col++) {   // last
+                        for (col = mark_end_X; col < int(text[mark_end_Y].length()); col++) {       // last
                             const string& line = text[mark_end_Y];
                             mvprintw(mark_end_Y - topLine, col+6, "%c", line[col]);
                         }
-                        for (col = 0; col < mark_start_X; col++) {                              // first
+                        for (col = 0; col < mark_start_X; col++) {                                  // first
                             const string& line = text[mark_start_Y];
                             mvprintw(mark_start_Y - topLine, col+6, "%c", line[col]);
                         }
-                        for (row = mark_end_Y + 1; row < mark_start_Y; row++) {                 // middle
+                        for (row = mark_end_Y + 1; row < mark_start_Y; row++) {                     // middle
                             const string& line = text[row];
                             for (col = 0; col < int(text[row].length()); col++) {
                                 mvprintw(row - topLine, col+6, "%c", line[col]);
@@ -246,8 +246,8 @@ private:
         }
 
         int visibleCursorY = cursorY - topLine;
-        move(visibleCursorY, cursorX + 6);  // Adjust cursor position to account for line numbers
-        refresh(); // Refresh the screen to update the display
+        move(visibleCursorY, cursorX + 6);      // Adjust cursor position to account for line numbers
+        refresh();                              // Refresh the screen to update the display
     }
 
     /**
@@ -260,8 +260,8 @@ private:
             topLine++;  // Scroll the view down
 
             // Clear the top line and shift the rest of the lines up by one
-            move(0, 1);  // Adjust for line numbers
-            insdelln(-1);  // Delete the top line (scrolling up the rest)
+            move(0, 1);     // Adjust for line numbers
+            insdelln(-1);   // Delete the top line (scrolling up the rest)
             
             refresh();
         }
@@ -269,13 +269,13 @@ private:
 
     void scrollUp() {
         if (cursorY < topLine + 2 && topLine != 0) {
-            topLine--;  // Scroll the view up
+            topLine--;      // Scroll the view up
 
             // Move all lines down by 1 on the screen to simulate scrolling up
-            move(0, 1);  // Move cursor to the top of the screen
-            insdelln(1);  // Insert a blank line at the top (pushing lines down)
+            move(0, 1);     // Move cursor to the top of the screen
+            insdelln(1);    // Insert a blank line at the top (pushing lines down)
 
-            refresh();  // Refresh the screen to reflect changes
+            refresh();      // Refresh the screen to reflect changes
         }
     }
 
@@ -376,13 +376,13 @@ private:
 
     void handleShift(int ch) {
         selecting = true;
-        if (ch == 402) {   // Shift + Right Arrow
+        if (ch == 402) {            // Shift + Right Arrow
             shiftRight();
-        } else if (ch == 393) {   // Shift + Left Arrow
+        } else if (ch == 393) {     // Shift + Left Arrow
             shiftLeft();
-        } else if (ch == 337) {   // Shift + Up Arrow
+        } else if (ch == 337) {     // Shift + Up Arrow
             shiftUp();
-        } else if (ch == 336) {   // Shift + Down Arrow
+        } else if (ch == 336) {     // Shift + Down Arrow
             shiftDown();
         }
     }
@@ -490,8 +490,8 @@ private:
             return;
         }
         // Clear the rest of the current line to handle any leftover characters
-        move(cursorY - topLine, 1); // Move to the correct line (offset by 5 for line numbers)
-        clrtoeol();  // Clear from cursor to the end of the line
+        move(cursorY - topLine, 1);     // Move to the correct line (offset by 5 for line numbers)
+        clrtoeol();                     // Clear from cursor to the end of the line
     }
 
     // for one \n it copies the text above
@@ -505,8 +505,8 @@ private:
             clrtoeol();
         }
         cursorY++;
-        move(cursorY - topLine, 1); // Move to the correct line (offset by 5 for line numbers)
-        clrtoeol();  // Clear from cursor to the end of the line
+        move(cursorY - topLine, 1);     // Move to the correct line (offset by 5 for line numbers)
+        clrtoeol();                     // Clear from cursor to the end of the line
         insdelln(1);
         refresh(); 
     }
@@ -625,8 +625,8 @@ private:
             printw("%c", ch);
             refresh();
         }
-        saveFile(newFileName);  // Save the new file
-        loadFile(newFileName);   // Load the new file into the editor
+        saveFile(newFileName);      // Save the new file
+        loadFile(newFileName);      // Load the new file into the editor
     }
 };
 
