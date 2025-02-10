@@ -63,6 +63,9 @@ public:
         endwin();
     }
 
+    /**
+     * @brief This is the main loop. It waits for user input, then handles it
+     */
     void run() {
         showFileMenu(); // Show file menu at the start
         while (true) {
@@ -140,16 +143,14 @@ private:
     bool allText = true;
 
     bool selecting = false;           // Is selection mode on
-    // int start_row, start_col;         // Start position for selection
-    // int end_row, end_col;             // End position for selection
-
-    // int mark_start_X, mark_end_X, mark_start_Y , mark_end_Y = -1; // Start of marked text (-1 means no selection)
-
     int mark_start_X = -1;
     int mark_end_X = -1;
     int mark_start_Y = -1;
     int mark_end_Y = -1;
 
+    /**
+     * @brief displays the visible text 
+     */
     void displayText() {
         int visibleLines = screenHeight;  // Adjust for the status line at the bottom
 
@@ -186,13 +187,61 @@ private:
                 mvprintw(i, 0, "%4d: ", i + 1 + topLine); // Print line number
                 attroff(COLOR_PAIR(14)); // Turn off line number color
 
-                int k;
-                attron(COLOR_PAIR(22));
-                for (k = mark_start_X; k < mark_end_X; k++) {
-                    const string& line = text[mark_end_Y];
-                    mvprintw(mark_start_Y, k+6, "%c", line[k]);
+                if (mark_start_Y == mark_end_Y) {       // in the same line
+        
+                    if (mark_start_X < mark_end_X) {    // shift + right arrows
+                        int k;
+                        attron(COLOR_PAIR(22));
+                        for (k = mark_start_X; k < mark_end_X; k++) {
+                            const string& line = text[mark_end_Y];
+                            mvprintw(mark_start_Y - topLine, k+6, "%c", line[k]);
+                        }
+                        attroff(COLOR_PAIR(22));
+                    } else {                            // shift + left arrows
+                        int k;
+                        attron(COLOR_PAIR(22));
+                        for (k = mark_end_X; k < mark_start_X; k++) {
+                            const string& line = text[mark_end_Y];
+                            mvprintw(mark_start_Y - topLine, k+6, "%c", line[k]);
+                        }
+                        attroff(COLOR_PAIR(22));
+                    }
+                } else {
+                    int row, col;
+                    attron(COLOR_PAIR(22));
+                    if (mark_start_Y < mark_end_Y) {
+                        for (col = mark_start_X; col < int(text[mark_start_Y].length()); col++) {   // first
+                            const string& line = text[mark_start_Y];
+                            mvprintw(mark_start_Y - topLine, col+6, "%c", line[col]);
+                        }
+                        for (col = 0; col < mark_end_X; col++) {                                    // last
+                            const string& line = text[mark_end_Y];
+                            mvprintw(mark_end_Y - topLine, col+6, "%c", line[col]);
+                        }
+                        for (row = mark_start_Y + 1; row < mark_end_Y; row++) {                     // middle
+                            const string& line = text[row];
+                            for (col = 0; col < int(text[row].length()); col++) {
+                                mvprintw(row - topLine, col+6, "%c", line[col]);
+                            }
+                        }
+                    } else {
+                        for (col = mark_end_X; col < int(text[mark_end_Y].length()); col++) {   // last
+                            const string& line = text[mark_end_Y];
+                            mvprintw(mark_end_Y - topLine, col+6, "%c", line[col]);
+                        }
+                        for (col = 0; col < mark_start_X; col++) {                              // first
+                            const string& line = text[mark_start_Y];
+                            mvprintw(mark_start_Y - topLine, col+6, "%c", line[col]);
+                        }
+                        for (row = mark_end_Y + 1; row < mark_start_Y; row++) {                 // middle
+                            const string& line = text[row];
+                            for (col = 0; col < int(text[row].length()); col++) {
+                                mvprintw(row - topLine, col+6, "%c", line[col]);
+                            }
+                        }
+                    }
+                    attroff(COLOR_PAIR(22));
                 }
-                attroff(COLOR_PAIR(22));
             }
         }
 
@@ -201,6 +250,9 @@ private:
         refresh(); // Refresh the screen to update the display
     }
 
+    /**
+     * @brief the following 2 functions handle scrolling when called
+     */
     void scrollDown() {
         
         // Only scroll if the cursor is at the bottom of the screen
@@ -227,6 +279,9 @@ private:
         }
     }
 
+    /**
+     * @brief the following 4 functions handle cursor movement
+     */
     void moveCursorUp() {
         if (cursorY > 0) {
             cursorY--;
@@ -254,7 +309,7 @@ private:
             refresh();
         }
     }
-    // okey
+    
     void moveCursorLeft() {
         clrtoeol();
         if (cursorX > 0) {
@@ -266,7 +321,7 @@ private:
             cursorX = text[cursorY].length();
         }
     }
-    // okey
+    
     void moveCursorRight() {
         clrtoeol();
         if (cursorX < int(text[cursorY].length())) {
@@ -321,17 +376,22 @@ private:
 
     void handleShift(int ch) {
         selecting = true;
-        if (ch == 402) {   // Ctrl + Right Arrow
+        if (ch == 402) {   // Shift + Right Arrow
             shiftRight();
-        } else if (ch == 393) {   // Ctrl + Left Arrow
+        } else if (ch == 393) {   // Shift + Left Arrow
             shiftLeft();
-        } else if (ch == 337) {   // Ctrl + Up Arrow
+        } else if (ch == 337) {   // Shift + Up Arrow
             shiftUp();
-        } else if (ch == 336) {   // Ctrl + Down Arrow
+        } else if (ch == 336) {   // Shift + Down Arrow
             shiftDown();
         }
     }
 
+    /**
+     * @brief handles cursor movement and resets marked text
+     * 
+     * @note resets marked text when moving cursor without pressing shift
+     */
     void handleCursor(int ch) {
         selecting = false;
         mark_start_X = -1;
@@ -350,6 +410,10 @@ private:
     }
 
     void insertChar(int ch) {
+        if (selecting == true) {
+            backspace();
+            selecting = false;
+        }
         if ((char)ch == '\t') {
             text[cursorY].insert(cursorX, 4, ' ');
             cursorX = cursorX + 4;
